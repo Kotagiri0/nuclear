@@ -5,9 +5,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .inputs import scan_remote_source
-from .policy import filter_by_min_severity
-from .scanning import scan_directory, scan_file, scan_git_history, scan_zip
+from scanner.inputs import scan_remote_source
+from scanner.policy import filter_by_min_severity
+from scanner.scanning import scan_directory, scan_file, scan_git_history, scan_zip
 
 
 def run_scan(

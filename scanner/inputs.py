@@ -5,7 +5,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-from .scanning import scan_directory, scan_zip
+from scanner.scanning import scan_directory, scan_zip
 
 
 def _looks_like_git_url(url: str) -> bool:
@@ -47,7 +47,7 @@ def _clone_git_repo(url: str, out_dir: str, shallow: bool = True) -> str:
 
 
 def scan_remote_source(url: str, scan_history: bool = False, history_commits: int = 50) -> tuple[list, str, str]:
-    from .scanning import scan_git_history
+    from scanner.scanning import scan_git_history
 
     tmp_dir = tempfile.mkdtemp(prefix="secret_scanner_remote_")
     findings = []
@@ -73,7 +73,7 @@ def scan_remote_source(url: str, scan_history: bool = False, history_commits: in
         if Path(downloaded).is_dir():
             findings.extend(scan_directory(downloaded))
         else:
-            from .scanning import scan_file
+            from scanner.scanning import scan_file
 
             findings.extend(scan_file(downloaded))
         return findings, downloaded, source_kind

@@ -2,10 +2,10 @@ import argparse
 import sys
 from pathlib import Path
 
-from .config import load_config
-from .policy import should_fail
-from .reporting import generate_report
-from .runner import run_scan
+from scanner.config import load_config
+from scanner.policy import should_fail
+from scanner.reporting import generate_report
+from scanner.runner import run_scan
 
 
 def build_parser(cfg=None) -> argparse.ArgumentParser:
@@ -26,6 +26,9 @@ def build_parser(cfg=None) -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    # Ensure stdout supports Unicode on Windows (handles emoji in reports)
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     cfg = load_config()
     parser = build_parser(cfg)
     args = parser.parse_args()

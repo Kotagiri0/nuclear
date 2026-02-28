@@ -1,4 +1,4 @@
-from .analysis import (
+from scanner.analysis import (
     Finding,
     TaintStep,
     TaintTrace,
@@ -11,11 +11,11 @@ from .analysis import (
     taint_analysis,
     validate_structure,
 )
-from .inputs import scan_remote_source
-from .policy import filter_by_min_severity, should_fail
-from .reporting import deduplicate, generate_report
-from .runner import run_scan
-from .scanning import scan_directory, scan_file, scan_git_history, scan_zip
+from scanner.inputs import scan_remote_source
+from scanner.policy import filter_by_min_severity, should_fail
+from scanner.reporting import deduplicate, generate_report
+from scanner.runner import run_scan
+from scanner.scanning import scan_directory, scan_file, scan_git_history, scan_zip
 
 __all__ = [
     "Finding",

@@ -25,9 +25,9 @@ from rich.table import Table
 from rich.text import Text
 from rich import box
 
-from .config import CONFIG_FILE, load_config, save_default_config, set_config_value
-from .policy import should_fail
-from .runner import run_scan
+from scanner.config import CONFIG_FILE, load_config, save_default_config, set_config_value
+from scanner.policy import should_fail
+from scanner.runner import run_scan
 
 console = Console()
 
@@ -147,13 +147,13 @@ def _do_scan(target_str: Optional[str], url: Optional[str], extra: dict) -> None
     if fmt == "table":
         _findings_table(findings)
     elif fmt == "json":
-        from .reporting import generate_report
+        from scanner.reporting import generate_report
         console.print_json(generate_report(findings, "json"))
     elif fmt == "sarif":
-        from .reporting import generate_report
+        from scanner.reporting import generate_report
         console.print_json(generate_report(findings, "sarif"))
     elif fmt == "text":
-        from .reporting import generate_report
+        from scanner.reporting import generate_report
         console.print(generate_report(findings, "text"))
 
     if should_fail(findings, _state["fail_on"]):

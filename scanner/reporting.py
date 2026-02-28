@@ -149,7 +149,9 @@ def _text_report(findings: list) -> str:
         color = severity_colors.get(finding.severity, "")
         out.append(f"{bold}{color}[{finding.severity}]{reset} {finding.secret_type} ({finding.category})")
         out.append(f"  📁 File   : {finding.file}:{finding.line_number}")
-        out.append(f"  🔑 Value  : {finding.matched_value}")
+        mv = finding.matched_value
+        mv_display = (mv[:60] + "...") if len(mv) > 60 else mv
+        out.append(f"  🔑 Value  : {mv_display}")
         out.append(f"  📊 Score  : {finding.score} | Entropy: {finding.entropy} | Confidence: {finding.confidence}")
         out.append(f"  🧭 Source : {finding.source}")
         flags = []

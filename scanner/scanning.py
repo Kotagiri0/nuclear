@@ -5,8 +5,8 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-from .analysis import scan_content
-from .patterns import SKIP_DIRS, SKIP_EXTENSIONS
+from scanner.analysis import scan_content
+from scanner.patterns import SKIP_DIRS, SKIP_EXTENSIONS
 
 
 def scan_file(filepath: str) -> list:

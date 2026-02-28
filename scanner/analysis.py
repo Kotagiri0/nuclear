@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from .patterns import (
+from scanner.patterns import (
     CONTEXT_KEYWORDS,
     HASH_PATTERNS,
     HIGH_ENTROPY_FILE_TYPES,
@@ -202,7 +202,11 @@ def _confidence(score: int, entropy: float, struct_valid: bool, tainted: bool) -
 def scan_content(content: str, filepath: str, source: str = "current") -> list:
     findings = []
     lines = content.splitlines()
-    ext = Path(filepath).suffix.lower()
+    p = Path(filepath)
+    ext = p.suffix.lower()
+    # Handle dotfiles like .env, .htpasswd (Path(".env").suffix returns "")
+    if not ext and p.name.startswith("."):
+        ext = p.name.lower()
 
     secret_vars = []
 
