@@ -12,6 +12,7 @@ from .analysis import (
     validate_structure,
 )
 from .inputs import scan_remote_source
+from .policy import filter_by_min_severity, should_fail
 from .reporting import deduplicate, generate_report
 from .scanning import scan_directory, scan_file, scan_git_history, scan_zip
 
@@ -27,6 +28,8 @@ __all__ = [
     "scan_remote_source",
     "generate_report",
     "deduplicate",
+    "filter_by_min_severity",
+    "should_fail",
     "shannon_entropy",
     "is_likely_hash",
     "is_false_positive",
