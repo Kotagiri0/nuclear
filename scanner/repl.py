@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import shlex
 import sys
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -55,6 +56,8 @@ def _build_state() -> dict:
         "history":     cfg.history,
         "commits":     cfg.commits,
         "cmd_history": [],
+        "scan_count":  0,
+        "total_findings": 0,
     }
 
 
@@ -155,6 +158,9 @@ def _do_scan(target_str: Optional[str], url: Optional[str], extra: dict) -> None
     elif fmt == "text":
         from scanner.reporting import generate_report
         console.print(generate_report(findings, "text"))
+
+    _state["scan_count"] += 1
+    _state["total_findings"] += len(findings)
 
     if should_fail(findings, _state["fail_on"]):
         console.print(f"\n[bold red]⚠  CI gate: findings at or above {_state['fail_on']} severity detected.[/bold red]")
@@ -420,6 +426,20 @@ _COMPLETIONS = [
 ]
 
 
+def _session_summary() -> None:
+    """Print a brief session summary on exit."""
+    scans = _state.get("scan_count", 0)
+    findings = _state.get("total_findings", 0)
+    cmds = len(_state.get("cmd_history", []))
+    findings_style = "red" if findings else "green"
+    console.print(
+        f"\n[bold cyan]☢  Сессия завершена[/bold cyan]  •  "
+        f"команд: [bold]{cmds}[/bold]  •  "
+        f"сканов: [bold]{scans}[/bold]  •  "
+        f"секретов найдено: [bold {findings_style}]{findings}[/bold {findings_style}]"
+    )
+
+
 def run() -> None:
     """Entry point for the nuclear REPL."""
     global _state
@@ -435,18 +455,30 @@ def run() -> None:
         complete_while_typing=True,
     )
 
+    _last_interrupt: float = 0.0
+
     while True:
         try:
             raw = session.prompt(
                 [("class:prompt.sign", "☢ "), ("class:prompt", "nuclear"), ("", " ❯ ")],
             )
-        except (KeyboardInterrupt, EOFError):
-            console.print("\n[dim]Bye![/dim]")
-            break
+        except KeyboardInterrupt:
+            now = time.time()
+            if now - _last_interrupt < 2.0:
+                _session_summary()
+                break
+            _last_interrupt = now
+            console.print("\n[yellow]Нажмите Ctrl+C ещё раз в течение 2 сек для выхода[/yellow]")
+            continue
+        except EOFError:
+            continue
 
         raw = raw.strip()
         if not raw:
             continue
+
+        # Reset interrupt timer on any valid input
+        _last_interrupt = 0.0
 
         _state["cmd_history"].append(raw)
 
@@ -459,7 +491,7 @@ def run() -> None:
         cmd, *rest = tokens
 
         if cmd in ("exit", "quit"):
-            console.print("[dim]Bye![/dim]")
+            _session_summary()
             break
 
         elif cmd == "scan":
