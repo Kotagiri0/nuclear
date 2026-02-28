@@ -1,7 +1,7 @@
 import subprocess
 from pathlib import Path
 
-from secret_scanner import scan_remote_source
+from scanner import scan_remote_source
 
 
 def test_scan_remote_source_supports_local_git_path(tmp_path):

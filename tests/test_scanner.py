@@ -2,7 +2,7 @@ import os
 import zipfile
 import tempfile
 import pytest
-from secret_scanner import (
+from scanner import (
     shannon_entropy,
     is_likely_hash,
     is_false_positive,

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from secret_scanner import (
+from scanner import (
     Finding,
     filter_by_min_severity,
     generate_report,
@@ -19,9 +19,9 @@ from secret_scanner import (
     shannon_entropy,
     should_fail,
 )
-from secret_scanner.analysis import taint_analysis
-from secret_scanner.cli import build_parser
-from secret_scanner.reporting import _sarif_report, deduplicate
+from scanner.analysis import taint_analysis
+from scanner.cli import build_parser
+from scanner.reporting import _sarif_report, deduplicate
 
 
 # ---------------------------------------------------------------------------
@@ -247,7 +247,7 @@ class TestCLIArgs:
         import os
         env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
         result = subprocess.run(
-            [sys.executable, "-m", "secret_scanner.cli", str(f)],
+            [sys.executable, "-m", "scanner.cli", str(f)],
             capture_output=True, text=True, env=env
         )
         assert result.returncode == 0
@@ -256,7 +256,7 @@ class TestCLIArgs:
         f = tmp_path / "vuln.py"
         f.write_text("API_KEY='AKIAJX7LKQHMBQWRFP2A'\n", encoding="utf-8")
         result = subprocess.run(
-            [sys.executable, "-m", "secret_scanner.cli", str(f), "--fail-on", "LOW"],
+            [sys.executable, "-m", "scanner.cli", str(f), "--fail-on", "LOW"],
             capture_output=True, text=True
         )
         assert result.returncode == 1
@@ -265,7 +265,7 @@ class TestCLIArgs:
         f = tmp_path / "vuln.py"
         f.write_text("API_KEY='AKIAJX7LKQHMBQWRFP2A'\n", encoding="utf-8")
         result = subprocess.run(
-            [sys.executable, "-m", "secret_scanner.cli", str(f), "--format", "json"],
+            [sys.executable, "-m", "scanner.cli", str(f), "--format", "json"],
             capture_output=True, text=True
         )
         data = json.loads(result.stdout)

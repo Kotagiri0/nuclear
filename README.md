@@ -20,20 +20,16 @@
 ## Архитектура проекта
 
 ```text
-src/
-  main.py
-  scanner.py                    # фасад совместимости
-  secret_scanner/
-    __init__.py
-    cli.py                      # контракт CLI
-    analysis.py                 # детекция, скоринг, taint, модели
-    scanning.py                 # сканеры file/dir/zip/history
-    inputs.py                   # загрузка из URL/Git
-    policy.py                   # фильтрация severity и fail-gate
-    reporting.py                # репортеры text/json/sarif
-    patterns.py                 # сигнатуры, sink-правила, пропуски
-  tools/
-    generate_corpus.py
+secret_scanner/
+  __init__.py
+  cli.py                      # контракт CLI
+  analysis.py                 # детекция, скоринг, taint, модели
+  scanning.py                 # сканеры file/dir/zip/history
+  inputs.py                   # загрузка из URL/Git
+  policy.py                   # фильтрация severity и fail-gate
+  reporting.py                # репортеры text/json/sarif
+  patterns.py                 # сигнатуры, sink-правила, пропуски
+  repl.py                     # интерактивный REPL
 tests/
   test_scanner.py
   test_corpus.py
@@ -57,24 +53,24 @@ pip install -r requirements.txt
 ## Локальный запуск
 
 ```bash
-python src/main.py .
-python src/main.py . --min-severity HIGH
-python src/main.py . --format json
-python src/main.py . --format sarif > scanner.sarif
-python src/main.py . --scan-history --history-commits 100
+nuclear-scan .
+nuclear-scan . --min-severity HIGH
+nuclear-scan . --format json
+nuclear-scan . --format sarif > scanner.sarif
+nuclear-scan . --scan-history --history-commits 100
 ```
 
 ## Сканирование по URL
 
 ```bash
 # Git-ссылка
-python src/main.py --url https://github.com/org/repo.git
+nuclear-scan --url https://github.com/org/repo.git
 
 # HTTP-ссылка на ZIP
-python src/main.py --url https://example.com/project.zip
+nuclear-scan --url https://example.com/project.zip
 
 # URL + история Git
-python src/main.py --url https://github.com/org/repo.git --scan-history --history-commits 100
+nuclear-scan --url https://github.com/org/repo.git --scan-history --history-commits 100
 ```
 
 ## Режим пакета
@@ -104,7 +100,7 @@ Workflow-файл: `.github/workflows/security-scan.yml`
 Базовая policy-команда в CI:
 
 ```bash
-python src/main.py src/secret_scanner --min-severity LOW --fail-on HIGH --format json
+nuclear-scan secret_scanner --min-severity LOW --fail-on HIGH --format json
 ```
 
 ## Тестовый корпус (22 проекта)
@@ -127,7 +123,7 @@ python src/main.py src/secret_scanner --min-severity LOW --fail-on HIGH --format
 Перегенерация корпуса:
 
 ```bash
-python src/tools/generate_corpus.py
+python tools/generate_corpus.py
 ```
 
 ## Тесты

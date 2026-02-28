@@ -16,17 +16,13 @@ dependencies = [
 ]
 
 [project.scripts]
-nuclear-scan = "secret_scanner.cli:main"
-nuclear = "secret_scanner.repl:run"
-
-[tool.setuptools]
-[tool.setuptools.package-dir]
-"" = "src"
+nuclear-scan = "scanner.cli:main"
+nuclear = "scanner.repl:run"
 
 [tool.setuptools.packages.find]
-where = ["src"]
-include = ["secret_scanner*"]
+where = ["."]
+include = ["scanner*"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["."]
 norecursedirs = ["tests/dir/github_real"]

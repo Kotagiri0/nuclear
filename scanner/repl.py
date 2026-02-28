@@ -25,9 +25,9 @@ from rich.table import Table
 from rich.text import Text
 from rich import box
 
-from .inputs import scan_remote_source
-from .policy import filter_by_min_severity, should_fail
-from .scanning import scan_directory, scan_file, scan_git_history, scan_zip
+from .config import CONFIG_FILE, load_config, save_default_config, set_config_value
+from .policy import should_fail
+from .runner import run_scan
 
 console = Console()
 
@@ -44,15 +44,22 @@ PROMPT_STYLE = Style.from_dict({
     "prompt.sign": "ansicyan bold",
 })
 
+
+def _build_state() -> dict:
+    """Build initial session state from user config."""
+    cfg = load_config()
+    return {
+        "format":      cfg.format if cfg.format in ("table", "json", "sarif", "text") else "table",
+        "severity":    cfg.severity,
+        "fail_on":     cfg.fail_on,
+        "history":     cfg.history,
+        "commits":     cfg.commits,
+        "cmd_history": [],
+    }
+
+
 # ── global session state ─────────────────────────────────────────────────────
-_state: dict = {
-    "format":    "table",       # table | json | sarif | text
-    "severity":  "LOW",         # min-severity filter
-    "fail_on":   "HIGH",
-    "history":   False,
-    "commits":   50,
-    "cmd_history": [],          # list of entered commands
-}
+_state: dict = {}  # populated in run()
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -121,33 +128,21 @@ def _do_scan(target_str: Optional[str], url: Optional[str], extra: dict) -> None
     history  = extra.get("history",  _state["history"])
     commits  = extra.get("commits",  _state["commits"])
 
-    findings: list = []
-
     with console.status("[cyan]Scanning…[/cyan]", spinner="dots"):
         try:
-            if url:
-                findings, _, _ = scan_remote_source(url, scan_history=history, history_commits=commits)
-            elif target_str:
-                target = Path(target_str)
-                if not target.exists():
-                    console.print(f"[red]Error:[/red] path [bold]{target_str}[/bold] does not exist.")
-                    return
-                if target.suffix.lower() == ".zip":
-                    findings = scan_zip(str(target))
-                elif target.is_dir():
-                    findings = scan_directory(str(target))
-                    if history and (target / ".git").exists():
-                        findings.extend(scan_git_history(str(target), max_commits=commits))
-                else:
-                    findings = scan_file(str(target))
-            else:
-                console.print("[red]Provide a target path or --url.[/red]")
-                return
+            findings = run_scan(
+                target=target_str,
+                url=url,
+                min_severity=min_sev,
+                scan_history=history,
+                history_commits=commits,
+            )
+        except (ValueError, FileNotFoundError) as exc:
+            console.print(f"[red]Error:[/red] {exc}")
+            return
         except Exception as exc:
             console.print(f"[red]Scan error:[/red] {exc}")
             return
-
-    findings = filter_by_min_severity(findings, min_sev)
 
     if fmt == "table":
         _findings_table(findings)
@@ -280,6 +275,61 @@ def _cmd_history() -> None:
         console.print(f"[dim]{i:3}[/dim]  {cmd}")
 
 
+def _cmd_config(tokens: list[str]) -> None:
+    """Handle `config` subcommands: show | path | init | set <key> <value>."""
+    sub = tokens[0].lower() if tokens else "show"
+
+    if sub == "show":
+        cfg = load_config()
+        table = Table(title="[bold]~/.nuclear/config.toml[/bold]", box=box.SIMPLE, show_header=False)
+        table.add_column("Key",   style="bold cyan", width=20)
+        table.add_column("Value", style="white")
+        for k, v in (
+            ("format",      cfg.format),
+            ("severity",    cfg.severity),
+            ("fail_on",     cfg.fail_on),
+            ("history",     str(cfg.history).lower()),
+            ("commits",     str(cfg.commits)),
+            ("output.file", cfg.output_file or "(stdout)"),
+            ("thresholds",  f"critical={cfg.threshold_critical} high={cfg.threshold_high} medium={cfg.threshold_medium}"),
+            ("custom patterns", str(len(cfg.custom_patterns))),
+            ("extra_ignore",    str(len(cfg.extra_ignore))),
+        ):
+            table.add_row(k, str(v))
+        console.print(table)
+
+    elif sub == "path":
+        console.print(f"[cyan]{CONFIG_FILE}[/cyan]  (exists: [{'green' if CONFIG_FILE.exists() else 'red'}]{CONFIG_FILE.exists()}[/])")
+
+    elif sub == "init":
+        path = save_default_config()
+        if path.exists():
+            console.print(f"[green]Config file ready:[/green] {path}")
+        else:
+            console.print(f"[green]Created:[/green] {path}")
+
+    elif sub == "set" and len(tokens) >= 3:
+        key, value = tokens[1], tokens[2]
+        try:
+            set_config_value(key, value)
+            # Also update the live session state where applicable
+            _KEY_TO_STATE = {
+                "format": "format", "severity": "severity",
+                "fail_on": "fail_on", "history": "history", "commits": "commits",
+            }
+            if key in _KEY_TO_STATE:
+                _state[_KEY_TO_STATE[key]] = value if key not in ("history",) else value.lower() in ("true", "on", "1", "yes")
+            console.print(f"[green]Saved:[/green] {key} = {value}")
+        except ValueError as exc:
+            console.print(f"[red]{exc}[/red]")
+
+    else:
+        console.print(
+            "[yellow]Usage:[/yellow] config [bold]show[/bold] | config [bold]path[/bold] | "
+            "config [bold]init[/bold] | config [bold]set[/bold] <key> <value>"
+        )
+
+
 HELP_TEXT = """
 [bold cyan]☢  nuclear REPL — commands[/bold cyan]
 
@@ -290,10 +340,16 @@ HELP_TEXT = """
      [dim]--history[/dim]                      Include Git commit history
      [dim]--commits <n>[/dim]                 Max commits to scan (default 50)
 
-[bold green]set[/bold green] [bold]<key> <value>[/bold]             Change session settings
+[bold green]set[/bold green] [bold]<key> <value>[/bold]             Change session settings (this session only)
      Keys: format · severity · fail-on · history · commits
      Example: set format json
               set severity HIGH
+
+[bold green]config[/bold green] [bold]<subcommand>[/bold]           Manage persistent user config (~/.nuclear/config.toml)
+     [dim]config show[/dim]                   Display current config values
+     [dim]config path[/dim]                   Show config file location
+     [dim]config init[/dim]                   Create default config file
+     [dim]config set <key> <value>[/dim]      Save a value to config file
 
 [bold green]status[/bold green]                           Show current session settings
 
@@ -313,6 +369,8 @@ HELP_TEXT = """
   scan --url https://github.com/user/repo --history
   set format table
   set fail-on CRITICAL
+  config show
+  config set severity HIGH
 """
 
 HELP_COMMAND: dict[str, str] = {
@@ -330,6 +388,15 @@ HELP_COMMAND: dict[str, str] = {
         "  history  — on | off\n"
         "  commits  — integer\n"
     ),
+    "config": (
+        "[bold]config <subcommand>[/bold]\n\n"
+        "Subcommands:\n"
+        "  show              — display all config values\n"
+        "  path              — show config file location\n"
+        "  init              — create default ~/.nuclear/config.toml\n"
+        "  set <key> <value> — persist a setting to the config file\n\n"
+        "Supported keys for 'config set': format, severity, fail_on, history, commits\n"
+    ),
 }
 
 
@@ -343,17 +410,20 @@ def _cmd_help(tokens: list[str]) -> None:
 # ── REPL loop ─────────────────────────────────────────────────────────────────
 
 _COMPLETIONS = [
-    "scan", "set", "status", "history", "clear", "help", "exit", "quit",
+    "scan", "set", "config", "status", "history", "clear", "help", "exit", "quit",
     "--url", "--format", "--severity", "--history", "--commits",
     "format", "severity", "fail-on", "commits",
     "table", "json", "sarif", "text",
     "LOW", "MEDIUM", "HIGH", "CRITICAL",
     "on", "off",
+    "show", "path", "init",
 ]
 
 
 def run() -> None:
     """Entry point for the nuclear REPL."""
+    global _state
+    _state = _build_state()
     _banner()
 
     completer = WordCompleter(_COMPLETIONS, ignore_case=True, sentence=False)
@@ -407,6 +477,9 @@ def run() -> None:
 
         elif cmd == "clear":
             os.system("cls" if sys.platform == "win32" else "clear")
+
+        elif cmd == "config":
+            _cmd_config(rest)
 
         elif cmd in ("help", "?"):
             _cmd_help(rest)

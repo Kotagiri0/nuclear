@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from secret_scanner import scan_directory
+from scanner import scan_directory
 
 
 CORPUS_ROOT = Path("tests/dir/corpus/projects")

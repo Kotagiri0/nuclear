@@ -28,10 +28,10 @@ jobs:
         run: pytest -q
 
       - name: Gate scanner (block on HIGH/CRITICAL)
-        run: python src/main.py src/secret_scanner --min-severity LOW --fail-on HIGH --format json
+        run: nuclear-scan scanner --min-severity LOW --fail-on HIGH --format json
 
       - name: Generate SARIF report
-        run: python src/main.py src/secret_scanner --min-severity LOW --format sarif > scanner.sarif
+        run: nuclear-scan scanner --min-severity LOW --format sarif > scanner.sarif
 
       - name: Upload SARIF artifact
         uses: actions/upload-artifact@v4

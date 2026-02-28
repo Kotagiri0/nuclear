@@ -14,6 +14,7 @@ from .analysis import (
 from .inputs import scan_remote_source
 from .policy import filter_by_min_severity, should_fail
 from .reporting import deduplicate, generate_report
+from .runner import run_scan
 from .scanning import scan_directory, scan_file, scan_git_history, scan_zip
 
 __all__ = [
@@ -26,6 +27,7 @@ __all__ = [
     "scan_zip",
     "scan_git_history",
     "scan_remote_source",
+    "run_scan",
     "generate_report",
     "deduplicate",
     "filter_by_min_severity",
