@@ -1,0 +1,112 @@
+[
+  {
+    "name": "py_vuln_small",
+    "vulnerable": true,
+    "language": "python"
+  },
+  {
+    "name": "py_clean_small",
+    "vulnerable": false,
+    "language": "python"
+  },
+  {
+    "name": "py_vuln_nested",
+    "vulnerable": true,
+    "language": "python"
+  },
+  {
+    "name": "py_clean_nested",
+    "vulnerable": false,
+    "language": "python"
+  },
+  {
+    "name": "js_vuln_small",
+    "vulnerable": true,
+    "language": "javascript"
+  },
+  {
+    "name": "js_clean_small",
+    "vulnerable": false,
+    "language": "javascript"
+  },
+  {
+    "name": "ts_vuln_nested",
+    "vulnerable": true,
+    "language": "typescript"
+  },
+  {
+    "name": "ts_clean_nested",
+    "vulnerable": false,
+    "language": "typescript"
+  },
+  {
+    "name": "java_vuln_small",
+    "vulnerable": true,
+    "language": "java"
+  },
+  {
+    "name": "java_clean_small",
+    "vulnerable": false,
+    "language": "java"
+  },
+  {
+    "name": "go_vuln_small",
+    "vulnerable": true,
+    "language": "go"
+  },
+  {
+    "name": "go_clean_small",
+    "vulnerable": false,
+    "language": "go"
+  },
+  {
+    "name": "mixed_vuln_large",
+    "vulnerable": true,
+    "language": "mixed"
+  },
+  {
+    "name": "mixed_clean_large",
+    "vulnerable": false,
+    "language": "mixed"
+  },
+  {
+    "name": "php_vuln_nested",
+    "vulnerable": true,
+    "language": "php"
+  },
+  {
+    "name": "php_clean_nested",
+    "vulnerable": false,
+    "language": "php"
+  },
+  {
+    "name": "csharp_vuln",
+    "vulnerable": true,
+    "language": "csharp"
+  },
+  {
+    "name": "csharp_clean",
+    "vulnerable": false,
+    "language": "csharp"
+  },
+  {
+    "name": "ruby_vuln",
+    "vulnerable": true,
+    "language": "ruby"
+  },
+  {
+    "name": "ruby_clean",
+    "vulnerable": false,
+    "language": "ruby"
+  },
+  {
+    "name": "rust_clean_nested",
+    "vulnerable": false,
+    "language": "rust"
+  },
+  {
+    "name": "rust_vuln_nested",
+    "vulnerable": true,
+    "language": "rust"
+  }
+]

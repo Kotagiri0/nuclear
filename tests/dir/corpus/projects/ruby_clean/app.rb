@@ -1,0 +1,2 @@
+token = 'example'
+puts token

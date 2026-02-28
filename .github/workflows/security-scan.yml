@@ -1,0 +1,40 @@
+name: security-scan
+
+on:
+  pull_request:
+    branches: [master, prod]
+  push:
+    branches: [master, prod]
+
+jobs:
+  test-and-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Gate scanner (block on HIGH/CRITICAL)
+        run: python src/main.py src/secret_scanner --min-severity LOW --fail-on HIGH --format json
+
+      - name: Generate SARIF report
+        run: python src/main.py src/secret_scanner --min-severity LOW --format sarif > scanner.sarif
+
+      - name: Upload SARIF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scanner-sarif
+          path: scanner.sarif

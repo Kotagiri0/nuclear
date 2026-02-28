@@ -1,0 +1,1 @@
+using System; class P { static void Main(){ Console.WriteLine("AKIAJX7LKQHMBQWRFP2A"); } }

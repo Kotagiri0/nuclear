@@ -1,0 +1,1 @@
+<?php $pwd='SuperSecret123!'; echo $pwd;

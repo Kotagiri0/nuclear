@@ -1,0 +1,1 @@
+redis: redis://admin:pass123@10.0.0.5:6379

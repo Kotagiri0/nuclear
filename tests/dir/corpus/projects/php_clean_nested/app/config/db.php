@@ -1,0 +1,1 @@
+<?php $pwd='example'; echo 'ok';
