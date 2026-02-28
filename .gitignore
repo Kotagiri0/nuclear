@@ -16,4 +16,5 @@ htmlcov/
 Thumbs.db
 
 # Nuclear scan reports
-.nuclear-scan-result/
+.nuclear-scan-result
+.workspace/
