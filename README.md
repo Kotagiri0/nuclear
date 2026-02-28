@@ -20,7 +20,7 @@
 ## Архитектура проекта
 
 ```text
-secret_scanner/
+scanner/
   __init__.py
   cli.py                      # контракт CLI
   analysis.py                 # детекция, скоринг, taint, модели
@@ -29,17 +29,33 @@ secret_scanner/
   policy.py                   # фильтрация severity и fail-gate
   reporting.py                # репортеры text/json/sarif
   patterns.py                 # сигнатуры, sink-правила, пропуски
+  config.py                   # пользовательский конфиг ~/.nuclear/config.toml
+  runner.py                   # единая точка запуска scan (cli + repl)
   repl.py                     # интерактивный REPL
 tests/
-  test_scanner.py
-  test_corpus.py
-  test_url_and_history.py
-  dir/
-    corpus/
-      manifest.json
-      projects/                 # 22 тестовых проекта (vulnerable + clean)
-  zips/
-    demo_vulnerable_project.zip
+  resources/                  # тестовые данные
+    dir/
+      corpus/
+        manifest.json
+        projects/             # 22 тестовых проекта (vulnerable + clean)
+    zips/
+      demo_vulnerable_project.zip
+    fixtures/
+    tools/
+      generate_corpus.py
+  tests/                      # тест-файлы
+    test_scanner.py
+    test_extended.py
+    test_corpus.py
+    test_url_and_history.py
+    test_analysis_branches.py
+    test_cli_integration.py
+    test_config.py
+    test_inputs.py
+    test_patterns_direct.py
+    test_reporting_full.py
+    test_runner.py
+    test_scanning.py
 .github/workflows/
   security-scan.yml
 ```
@@ -100,12 +116,12 @@ Workflow-файл: `.github/workflows/security-scan.yml`
 Базовая policy-команда в CI:
 
 ```bash
-nuclear-scan secret_scanner --min-severity LOW --fail-on HIGH --format json
+nuclear-scan scanner --min-severity LOW --fail-on HIGH --format json
 ```
 
 ## Тестовый корпус (22 проекта)
 
-В `tests/dir/corpus/projects` находятся уязвимые и чистые проекты разных размеров, языков и уровней вложенности.
+В `tests/resources/dir/corpus/projects` находятся уязвимые и чистые проекты разных размеров, языков и уровней вложенности.
 
 Покрываемые языки:
 
