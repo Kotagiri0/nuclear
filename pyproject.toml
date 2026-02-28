@@ -25,4 +25,5 @@ include = ["scanner*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-norecursedirs = ["tests/dir/github_real"]
+testpaths = ["tests/tests"]
+norecursedirs = ["tests/resources/dir/github_real"]

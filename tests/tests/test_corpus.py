@@ -4,8 +4,8 @@ from pathlib import Path
 from scanner import scan_directory
 
 
-CORPUS_ROOT = Path("tests/dir/corpus/projects")
-MANIFEST_PATH = Path("tests/dir/corpus/manifest.json")
+CORPUS_ROOT = Path("tests/resources/dir/corpus/projects")
+MANIFEST_PATH = Path("tests/resources/dir/corpus/manifest.json")
 
 
 def test_corpus_manifest_exists_and_size():

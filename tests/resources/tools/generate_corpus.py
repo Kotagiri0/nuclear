@@ -1,7 +1,7 @@
 from pathlib import Path
 import json
 
-ROOT = Path("tests/dir/corpus/projects")
+ROOT = Path("tests/resources/dir/corpus/projects")
 ROOT.mkdir(parents=True, exist_ok=True)
 
 projects = [
@@ -180,5 +180,5 @@ manifest = [
     {"name": p["name"], "vulnerable": p["vulnerable"], "language": p["language"]}
     for p in projects
 ]
-Path("tests/dir/corpus/manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+Path("tests/resources/dir/corpus/manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 print(f"created:{len(projects)}")
