@@ -154,8 +154,8 @@ class TestScanRemoteSource:
         with zipfile.ZipFile(zf_path, "w") as zf:
             zf.writestr("secret.py", "AKIAJX7LKQHMBQWRFP2A\n")
 
-        with patch("scanner.inputs._looks_like_git_url", return_value=False), \
-             patch("scanner.inputs._download_url", return_value=str(zf_path)):
+        with patch("scanner.core.inputs._looks_like_git_url", return_value=False), \
+             patch("scanner.core.inputs._download_url", return_value=str(zf_path)):
             findings, _, kind = scan_remote_source("https://example.com/pkg.zip")
         assert kind == "zip"
 
@@ -163,8 +163,8 @@ class TestScanRemoteSource:
         secret_file = tmp_path / "cfg.py"
         secret_file.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
 
-        with patch("scanner.inputs._looks_like_git_url", return_value=False), \
-             patch("scanner.inputs._download_url", return_value=str(secret_file)):
+        with patch("scanner.core.inputs._looks_like_git_url", return_value=False), \
+             patch("scanner.core.inputs._download_url", return_value=str(secret_file)):
             findings, _, kind = scan_remote_source("https://example.com/cfg.py")
         assert kind == "file"
 
@@ -188,7 +188,7 @@ class TestScanRemoteSource:
             created_dirs.append(d)
             return d
 
-        with patch("scanner.inputs.tempfile") as mock_tmpmod:
+        with patch("scanner.core.inputs.tempfile") as mock_tmpmod:
             mock_tmpmod.mkdtemp = tracking_mkdtemp
             # For local git repo, tmp_dir is created but repo is returned directly
             scan_remote_source(str(repo))
@@ -199,7 +199,7 @@ class TestScanRemoteSource:
         mock_result.returncode = 1
         mock_result.stderr = "fatal error"
 
-        with patch("scanner.inputs._looks_like_git_url", return_value=True), \
-             patch("scanner.inputs._clone_git_repo", side_effect=RuntimeError("fail")):
+        with patch("scanner.core.inputs._looks_like_git_url", return_value=True), \
+             patch("scanner.core.inputs._clone_git_repo", side_effect=RuntimeError("fail")):
             with pytest.raises(RuntimeError):
                 scan_remote_source("https://bad.example.com/repo.git")

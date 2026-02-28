@@ -1,0 +1,17 @@
+[tool]
+name = "nuclear"
+version = "0.1.0"
+description = "Secret Scanner — ищет API-ключи, токены и чувствительные данные"
+authors = ["Your Name <youremail@example.com>"]
+license = "MIT"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+dependencies = []
+dynamic = ["dependencies"]
+
+[project.scripts]
+nuclear = "nuclear.cli:main"

@@ -1,3 +1,4 @@
+# filepath: nuclear/nuclear/cli.py
 import argparse
 import sys
 from pathlib import Path
@@ -26,7 +27,6 @@ def build_parser(cfg=None) -> argparse.ArgumentParser:
 
 
 def main() -> None:
-    # Ensure stdout supports Unicode on Windows (handles emoji in reports)
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     cfg = load_config()

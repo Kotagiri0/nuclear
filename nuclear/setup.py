@@ -1,0 +1,15 @@
+from setuptools import setup, find_packages
+
+setup(
+    name='nuclear',
+    version='0.1',
+    packages=find_packages(),
+    entry_points={
+        'console_scripts': [
+            'nuclear=nuclear.cli:main',
+        ],
+    },
+    install_requires=[
+        # List your dependencies here
+    ],
+)

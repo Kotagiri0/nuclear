@@ -1,3 +1,5 @@
+# This file contains the command-line interface logic for the project. It uses the argparse library to parse command-line arguments and execute the scanning functionality.
+
 import argparse
 import sys
 from pathlib import Path

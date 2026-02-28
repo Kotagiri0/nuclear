@@ -11,11 +11,19 @@ from scanner.core.analysis import (
     taint_analysis,
     validate_structure,
 )
-from scanner.core.inputs import scan_remote_source
-from scanner.output.policy import filter_by_min_severity, should_fail
-from scanner.output.reporting import deduplicate, generate_report
-from scanner.core.runner import run_scan
+from scanner.core.patterns import (
+    CONTEXT_KEYWORDS,
+    HASH_PATTERNS,
+    HIGH_ENTROPY_FILE_TYPES,
+    IGNORE_PATTERNS,
+    PATTERNS,
+    SINK_NAMES,
+    SKIP_DIRS,
+    SKIP_EXTENSIONS,
+)
 from scanner.core.scanning import scan_directory, scan_file, scan_git_history, scan_zip
+from scanner.core.runner import run_scan
+from scanner.core.inputs import scan_remote_source
 
 __all__ = [
     "Finding",
@@ -28,15 +36,19 @@ __all__ = [
     "scan_git_history",
     "scan_remote_source",
     "run_scan",
-    "generate_report",
-    "deduplicate",
-    "filter_by_min_severity",
-    "should_fail",
-    "shannon_entropy",
-    "is_likely_hash",
-    "is_false_positive",
     "has_context",
-    "validate_structure",
+    "is_false_positive",
+    "is_likely_hash",
     "score_to_severity",
+    "shannon_entropy",
     "taint_analysis",
+    "validate_structure",
+    "PATTERNS",
+    "CONTEXT_KEYWORDS",
+    "HASH_PATTERNS",
+    "HIGH_ENTROPY_FILE_TYPES",
+    "IGNORE_PATTERNS",
+    "SINK_NAMES",
+    "SKIP_DIRS",
+    "SKIP_EXTENSIONS",
 ]

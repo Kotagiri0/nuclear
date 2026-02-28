@@ -14,3 +14,6 @@ htmlcov/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Nuclear scan reports
+.nuclear-scan-result/
