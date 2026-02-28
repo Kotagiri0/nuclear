@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from scanner.inputs import (
+from scanner.core.inputs import (
     _clone_git_repo,
     _download_url,
     _looks_like_git_url,
@@ -179,7 +179,7 @@ class TestScanRemoteSource:
 
     def test_tmp_dir_cleaned_up_on_success(self, tmp_path):
         repo = self._make_local_git_repo(tmp_path)
-        import scanner.inputs as inputs_mod
+        import scanner.core.inputs as inputs_mod
         created_dirs: list[str] = []
         original_mkdtemp = tempfile.mkdtemp
 

@@ -8,8 +8,8 @@ import json
 import pytest
 
 from scanner import Finding, generate_report
-from scanner.analysis import TaintStep, TaintTrace
-from scanner.reporting import (
+from scanner.core.analysis import TaintStep, TaintTrace
+from scanner.output.reporting import (
     _json_report,
     _sarif_report,
     _text_report,

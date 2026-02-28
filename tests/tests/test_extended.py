@@ -19,9 +19,9 @@ from scanner import (
     shannon_entropy,
     should_fail,
 )
-from scanner.analysis import taint_analysis
+from scanner.core.analysis import taint_analysis
 from scanner.cli import build_parser
-from scanner.reporting import _sarif_report, deduplicate
+from scanner.output.reporting import _sarif_report, deduplicate
 
 
 # ---------------------------------------------------------------------------

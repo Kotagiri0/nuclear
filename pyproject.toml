@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
-nuclear-scan = "scanner.cli:main"
+nuclear-scan = "scanner.cli.main:main"
 nuclear = "scanner.repl:run"
 
 [tool.setuptools.packages.find]

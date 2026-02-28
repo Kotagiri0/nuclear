@@ -7,7 +7,7 @@ import re
 
 import pytest
 
-from scanner.analysis import (
+from scanner.core.analysis import (
     _confidence,
     _extract_var_name,
     _find_sink_name,

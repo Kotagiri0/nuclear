@@ -7,8 +7,8 @@ import re
 
 import pytest
 
-from scanner.analysis import is_false_positive
-from scanner.patterns import (
+from scanner.core.analysis import is_false_positive
+from scanner.core.patterns import (
     IGNORE_PATTERNS,
     PATTERNS,
 )

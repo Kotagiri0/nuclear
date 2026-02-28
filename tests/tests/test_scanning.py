@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import pytest
 
-from scanner.scanning import (
+from scanner.core.scanning import (
     _run_git,
     scan_directory,
     scan_file,

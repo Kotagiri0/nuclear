@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from scanner.runner import run_scan
+from scanner.core.runner import run_scan
 
 
 # ── error handling ─────────────────────────────────────────────────────────────
