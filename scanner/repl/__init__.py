@@ -59,7 +59,7 @@ def run() -> None:
     while True:
         try:
             raw = session.prompt(
-                [("class:prompt.sign", "☢ "), ("class:prompt", "nuclear"), ("", " ❯ ")],
+                [("class:prompt.sign", "☢ "), ("class:prompt", "nuclear"), ("", " > ")],
             )
         except KeyboardInterrupt:
             now = time.time()
