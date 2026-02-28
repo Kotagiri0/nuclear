@@ -1,194 +1,150 @@
-# 🔍 Secret Scanner
+# Nuclear Secret Scanner
 
-Инструмент статического анализа для поиска утечек секретов в исходном коде. Находит API-ключи, токены, пароли и другие чувствительные данные — и показывает, куда они утекают в коде.
+Продвинутый статический сканер для поиска утечек секретов и критичных чувствительных фрагментов кода.
 
----
+## Что реализовано
 
-## Возможности
+- Обнаружение API-ключей, токенов, учетных данных БД, приватных ключей и общих секретов.
+- Ранжирование находок по score, severity (`LOW`/`MEDIUM`/`HIGH`/`CRITICAL`) и confidence.
+- Точная привязка к месту в формате `файл:строка` с типом уязвимости.
+- Трассировка опасного использования секретов через taint-цепочки (источник → распространение → опасный sink).
+- Поддерживаемые режимы сканирования:
+  - локальный файл,
+  - локальная директория,
+  - локальный zip-архив,
+  - удаленный URL (`git`, прямой `zip/http`),
+  - история Git (`--scan-history`).
+- Поддержка CI-политики (`--fail-on HIGH`) для блокировки merge в `prod/master`.
+- Форматы отчетов: `text`, `json`, `sarif`.
 
-### 🎯 Четыре слоя детекции
+## Архитектура проекта
 
-**Pattern-based** — 24 сигнатуры для популярных провайдеров:
-AWS, GitHub, Stripe, Google, Telegram, SendGrid, Slack, Twilio, Mailgun, JWT, RSA-ключи и generic-паттерны для паролей, токенов и API-ключей.
-
-**Entropy-based** — вычисление энтропии Шеннона для каждой строки. Случайные символы (как настоящие ключи) имеют высокую энтропию — это поднимает итоговый score.
-
-**Context-based** — анализ окружения строки. Если рядом есть слова `api_key`, `secret`, `password`, `token` — вероятность утечки выше.
-
-**Structural validation** — проверка структуры токена: у JWT ровно 3 части base64, AWS-ключ строго 20 символов с префиксом `AKIA`, RSA-ключ имеет заголовок `BEGIN/END`.
-
----
-
-### 🔗 Taint-трекинг (semi-SAST)
-
-Инструмент не просто находит секрет — он отслеживает его путь по коду рекурсивно через цепочку присваиваний до опасного вызова.
-
+```text
+src/
+  main.py
+  scanner.py                    # фасад совместимости
+  secret_scanner/
+    __init__.py
+    cli.py                      # контракт CLI
+    analysis.py                 # детекция, скоринг, taint, модели
+    scanning.py                 # сканеры file/dir/zip/history
+    inputs.py                   # загрузка из URL/Git
+    policy.py                   # фильтрация severity и fail-gate
+    reporting.py                # репортеры text/json/sarif
+    patterns.py                 # сигнатуры, sink-правила, пропуски
+  tools/
+    generate_corpus.py
+tests/
+  test_scanner.py
+  test_corpus.py
+  test_url_and_history.py
+  dir/
+    corpus/
+      manifest.json
+      projects/                 # 22 тестовых проекта (vulnerable + clean)
+  zips/
+    demo_vulnerable_project.zip
+.github/workflows/
+  security-scan.yml
 ```
-AWS_KEY = "AKIA..."                    ← источник
-    ↓ propagated from AWS_KEY
-headers = {"X-Api-Key": AWS_KEY}       ← промежуточный шаг
-    ↓ propagated from headers
-requests.get(url, headers=headers)     ← 💥 HTTP request (sink)
-```
-
-Поддерживаемые типы sink-ов: HTTP-запросы (`requests`, `httpx`, `aiohttp`, `urllib`), логирование (`logging`, `print`), файловый ввод-вывод (`open`), shell-команды (`subprocess`, `os.system`), сетевые соединения (`socket`, `paramiko`, `pysftp`), облачные SDK (`boto3`), базы данных (`psycopg2`, `pymongo`, `sqlalchemy`).
-
----
-
-### 📦 Поддержка ZIP-архивов
-
-Можно подать на вход `.zip`-архив — инструмент сам распакует его, просканирует все файлы и сообщит о находках с сохранением внутренней структуры путей.
-
-```bash
-python main.py project.zip
-```
-
----
-
-### 📊 Scoring и приоритизация
-
-Каждая находка получает числовой score по совокупности факторов:
-
-| Критерий | Бонус |
-|---|---|
-| Regex совпадение | базовый score паттерна |
-| Энтропия > 4.5 | +3 |
-| Энтропия > 3.5 | +1 |
-| Контекстные слова рядом | +2 |
-| Файл `.env` / конфигурационный | +2–3 |
-| Валидная структура токена | +3 |
-| Taint-трейс найден | +2 |
-| Похоже на хэш (MD5/SHA) | −3 |
-
-Итоговая классификация:
-
-| Score | Severity |
-|---|---|
-| 12+ | 🔴 CRITICAL |
-| 8–11 | 🟠 HIGH |
-| 5–7 | 🟡 MEDIUM |
-| < 5 | 🔵 LOW |
-
----
-
-### 🚫 Фильтрация ложных срабатываний
-
-Автоматически понижается приоритет строк, которые содержат `example`, `test`, `fake`, `dummy`, `placeholder`, `xxxx` или повторяющиеся символы, выглядят как хэш (MD5, SHA1, SHA256 по длине и алфавиту), или находятся в комментариях (`#`, `//`).
-
----
 
 ## Установка
 
 ```bash
-git clone https://github.com/yourname/secret-scanner
-cd secret-scanner
 pip install -r requirements.txt
 ```
 
-Требования: Python 3.10+. Зависимости только для тестов — сам сканер использует исключительно стандартную библиотеку.
-
----
-
-## Использование
+## Локальный запуск
 
 ```bash
-# Сканировать директорию
-python main.py ./my_project
-
-# Сканировать ZIP-архив
-python main.py my_project.zip
-
-# Сканировать один файл
-python main.py config.env
-
-# Только HIGH и CRITICAL
-python main.py ./my_project --min-severity HIGH
-
-# Вывод в JSON
-python main.py ./my_project --format json > report.json
+python src/main.py .
+python src/main.py . --min-severity HIGH
+python src/main.py . --format json
+python src/main.py . --format sarif > scanner.sarif
+python src/main.py . --scan-history --history-commits 100
 ```
 
----
+## Сканирование по URL
 
-## Пример вывода
+```bash
+# Git-ссылка
+python src/main.py --url https://github.com/org/repo.git
 
-```
-🔍 Secret Scanner Report
-Found 3 potential secret(s)
+# HTTP-ссылка на ZIP
+python src/main.py --url https://example.com/project.zip
 
-======================================================================
-[CRITICAL] AWS Access Key
-  📁 File   : api_client.py:4
-  🔑 Value  : AKIAJX7LKQHMBQWRFP2A
-  📊 Score  : 17 | Entropy: 3.88
-  🏷  Flags  : context✓, structure✓, taint:2✓
-  📝 Line   : AWS_KEY = "AKIAJX7LKQHMBQWRFP2A"
-  ──────────────────────────────────────────────────
-  🔗 Taint trace: AWS_KEY → HTTP request
-     📍 Source : api_client.py:4
-     ↓  api_client.py:8  [propagated from AWS_KEY]
-        headers = {"X-Api-Key": AWS_KEY}
-     💥 Sink   : api_client.py:9  [HTTP request]
-        requests.get("https://api.internal.com/users/", headers=headers)
-----------------------------------------------------------------------
-
-Summary:
-  CRITICAL: 2
-  HIGH: 1
-
-  ⚠  Secrets actively used in dangerous sinks: 2
+# URL + история Git
+python src/main.py --url https://github.com/org/repo.git --scan-history --history-commits 100
 ```
 
----
+## Режим пакета
+
+Установка в editable-режиме и запуск через консольную команду:
+
+```bash
+pip install -e .
+nuclear-scan . --fail-on HIGH
+```
+
+Сборка wheel/sdist:
+
+```bash
+python -m build
+```
+
+## CI и защита веток
+
+Workflow-файл: `.github/workflows/security-scan.yml`
+
+- Запускает unit/integration тесты.
+- Запускает scanner gate по исходникам проекта.
+- Падает, если найдены уязвимости уровня `HIGH` или `CRITICAL`.
+- Формирует SARIF-артефакт.
+
+Базовая policy-команда в CI:
+
+```bash
+python src/main.py src/secret_scanner --min-severity LOW --fail-on HIGH --format json
+```
+
+## Тестовый корпус (22 проекта)
+
+В `tests/dir/corpus/projects` находятся уязвимые и чистые проекты разных размеров, языков и уровней вложенности.
+
+Покрываемые языки:
+
+- Python
+- JavaScript
+- TypeScript
+- Java
+- Go
+- PHP
+- C#
+- Ruby
+- Rust
+- смешанная многопапочная структура
+
+Перегенерация корпуса:
+
+```bash
+python src/tools/generate_corpus.py
+```
 
 ## Тесты
 
 ```bash
-pytest test_scanner.py -v
+pytest -q
 ```
 
-73 теста покрывают все слои детекции, taint-трекинг, zip-сканирование и генерацию отчётов.
+Включают:
 
----
+- исходные unit-тесты сканера,
+- тесты качества корпуса,
+- тесты URL-сканирования и сканирования истории Git.
 
-## Архитектура
+## Коды выхода
 
-```
-Входной путь (файл / директория / .zip)
-        ↓
-    scan_content()
-        ├── regex-паттерны       → базовый score
-        ├── Shannon entropy      → +score если высокая
-        ├── context keywords     → +score если есть
-        ├── structural validate  → +score если структура верна
-        └── taint_analysis()     → отслеживание до sink + +score
-        ↓
-    scoring engine
-        ↓
-    severity classification
-        ↓
-    generate_report() → text / JSON
-```
+- `0` — нет находок на уровне `--fail-on` и выше.
+- `1` — есть хотя бы одна находка на уровне `--fail-on` и выше.
 
----
-
-## Поддерживаемые форматы
-
-Сканируются все текстовые файлы. Автоматически пропускаются изображения, шрифты, медиа, архивы, бинарники, `.lock`-файлы, а также директории `node_modules`, `.git`, `__pycache__`, `venv`, `dist`, `build`.
-
----
-
-## Exit codes
-
-| Код | Значение |
-|---|---|
-| `0` | Секретов не найдено (или все ниже порога) |
-| `1` | Найдены находки уровня HIGH или CRITICAL |
-
-Удобно для CI/CD:
-
-```yaml
-# GitHub Actions
-- name: Scan for secrets
-  run: python main.py . --min-severity HIGH
-```
+Это позволяет включить жесткий CI/CD gate на защищенных ветках.
