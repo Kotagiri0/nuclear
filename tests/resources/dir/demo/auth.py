@@ -20,7 +20,7 @@ def send_payment(amount, card_token):
     payload = {"amount": amount, "source": card_token, "key": key}
     response = requests.post("https://api.stripe.com/v1/charges", data=payload)
     if response.status_code != 200:
-        logger.error(f"Payment failed, key used: {STRIPE_KEY}")
+        logger.error(f"Платеж не выполнен, использован ключ: {STRIPE_KEY}")
     return response
 
 def notify_admin(message, auth_token=None):

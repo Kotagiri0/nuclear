@@ -211,7 +211,7 @@ class TestScanContent:
         assert any(f.secret_type == "GitHub Token" for f in findings)
 
     def test_skips_comments(self):
-        content = "# api_key = \"ghp_mNpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvW\"\n"
+        content = "# ключ_api = \"ghp_mNpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvW\"\n"
         assert len(scan_content(content, "test.py")) == 0
 
     def test_finds_jwt(self):
@@ -382,7 +382,7 @@ class TestGenerateReport:
         return f
 
     def test_empty_findings(self):
-        assert "No secrets found" in generate_report([])
+        assert "Секреты не найдены" in generate_report([])
 
     def test_text_report_contains_severity(self):
         assert "HIGH" in generate_report([self._make_finding("HIGH", 8)], "text")

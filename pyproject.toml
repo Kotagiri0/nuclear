@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nuclear-secret-scanner"
+version = "0.2.0"
+description = "Advanced secret and sensitive data scanner with URL/history and CI policy gate"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "nuclear" }]
+dependencies = [
+    "typer[all]>=0.12.0",
+    "rich>=13.7.0",
+    "prompt_toolkit>=3.0.43",
+]
+
+[project.scripts]
+nuclear-scan = "scanner.cli.main:main"
+nuclear = "scanner.repl:run"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["scanner*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests/tests"]
+norecursedirs = ["tests/resources/dir/github_real"]
