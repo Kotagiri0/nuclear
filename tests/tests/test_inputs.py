@@ -57,23 +57,32 @@ class TestLooksLikeGitUrl:
 
 class TestDownloadUrl:
     def test_filename_extracted_from_url(self, tmp_path):
-        with patch("urllib.request.urlretrieve") as mock_ret:
-            mock_ret.side_effect = lambda url, dest: None
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b"data"
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        with patch("urllib.request.urlopen", return_value=mock_resp):
             result = _download_url("https://example.com/myfile.zip", str(tmp_path))
         assert result.endswith("myfile.zip")
 
     def test_fallback_filename_when_no_path(self, tmp_path):
-        with patch("urllib.request.urlretrieve") as mock_ret:
-            mock_ret.side_effect = lambda url, dest: None
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b"data"
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        with patch("urllib.request.urlopen", return_value=mock_resp):
             result = _download_url("https://example.com/", str(tmp_path))
         assert "downloaded_target" in result
 
-    def test_calls_urlretrieve_with_correct_args(self, tmp_path):
-        with patch("urllib.request.urlretrieve") as mock_ret:
-            mock_ret.side_effect = lambda url, dest: None
+    def test_calls_urlopen_with_correct_args(self, tmp_path):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b"data"
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        with patch("urllib.request.urlopen", return_value=mock_resp) as mock_open:
             _download_url("https://example.com/data.zip", str(tmp_path))
-        mock_ret.assert_called_once()
-        call_url = mock_ret.call_args[0][0]
+        mock_open.assert_called_once()
+        call_url = mock_open.call_args[0][0]
         assert call_url == "https://example.com/data.zip"
 
 

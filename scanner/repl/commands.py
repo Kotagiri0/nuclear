@@ -45,6 +45,8 @@ def parse_scan_args(tokens: list[str]) -> tuple[Optional[str], Optional[str], di
             i += 2
         elif tok in ("--history", "-H"):
             extra["history"] = True; i += 1
+        elif tok in ("--quiet", "-q"):
+            extra["quiet"] = True; i += 1
         elif tok in ("--commits", "-c") and i + 1 < len(tokens):
             try:
                 extra["commits"] = int(tokens[i + 1])
@@ -65,6 +67,7 @@ def cmd_scan(rest: list[str], state: dict) -> None:
     min_sev = extra.get("severity", state["severity"])
     history = extra.get("history",  state["history"])
     commits = extra.get("commits",  state["commits"])
+    quiet   = extra.get("quiet",    False)
 
     with console.status("[cyan]Scanning…[/cyan]", spinner="dots"):
         try:
@@ -82,23 +85,29 @@ def cmd_scan(rest: list[str], state: dict) -> None:
             console.print(f"[red]Scan error:[/red] {exc}")
             return
 
-    # Display results
-    if fmt == "table":
-        findings_table(findings)
-    elif fmt == "json":
-        from scanner.output.reporting import generate_report
-        console.print_json(generate_report(findings, "json"))
-    elif fmt == "sarif":
-        from scanner.output.reporting import generate_report
-        console.print_json(generate_report(findings, "sarif"))
-    elif fmt == "text":
-        from scanner.output.reporting import generate_report
-        console.print(generate_report(findings, "text"))
-
-    # Generate HTML report
+    # Generate HTML report (always saved)
     scan_target = target or url or "unknown"
     report_path = save_html_report(findings, target=scan_target)
-    console.print(f"\n[dim]📄 HTML report: [cyan]{report_path}[/cyan][/dim]")
+
+    if quiet:
+        # Quiet mode: only severity summary + report path
+        _print_quiet_summary(findings, report_path)
+    else:
+        # Full output
+        if fmt == "table":
+            findings_table(findings)
+        elif fmt == "json":
+            from scanner.output.reporting import generate_report
+            console.print_json(generate_report(findings, "json"))
+        elif fmt == "sarif":
+            from scanner.output.reporting import generate_report
+            console.print_json(generate_report(findings, "sarif"))
+        elif fmt == "text":
+            from scanner.output.reporting import generate_report
+            from rich.text import Text as RichText
+            console.print(RichText.from_ansi(generate_report(findings, "text")))
+
+        console.print(f"\n[dim]📄 HTML report: [cyan]{report_path}[/cyan][/dim]")
 
     # Update stats
     state["scan_count"] += 1
@@ -106,6 +115,29 @@ def cmd_scan(rest: list[str], state: dict) -> None:
 
     if should_fail(findings, state["fail_on"]):
         console.print(f"[bold red]⚠  CI gate: findings at or above {state['fail_on']} severity detected.[/bold red]")
+
+
+def _print_quiet_summary(findings: list, report_path) -> None:
+    """Print compact severity summary for --quiet mode."""
+    if not findings:
+        console.print("[bold #00d787]✔  No secrets found[/bold #00d787]")
+        console.print(f"[dim]📄 Report: [cyan]{report_path}[/cyan][/dim]")
+        return
+
+    counts: dict[str, int] = {}
+    for f in findings:
+        counts[f.severity] = counts.get(f.severity, 0) + 1
+
+    console.print(f"\n[bold #ff5f00]☢[/bold #ff5f00]  [bold]Scan complete: {len(findings)} finding(s)[/bold]")
+    parts = []
+    for sev in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
+        n = counts.get(sev, 0)
+        if n:
+            style = SEVERITY_STYLE.get(sev, "white")
+            parts.append(f"[{style}]{sev}: {n}[/{style}]")
+    if parts:
+        console.print("  " + "  ".join(parts))
+    console.print(f"[dim]📄 Full report: [cyan]{report_path}[/cyan][/dim]\n")
 
 
 # ── set ──────────────────────────────────────────────────────────────────────
@@ -238,7 +270,8 @@ HELP_COMMAND: dict[str, str] = {
         "  [cyan]--format, -f[/cyan] <fmt>        Output format: table | json | sarif | text\n"
         "  [cyan]--severity, -s[/cyan] <level>    Min severity: LOW | MEDIUM | HIGH | CRITICAL\n"
         "  [cyan]--history, -H[/cyan]             Include Git commit history\n"
-        "  [cyan]--commits, -c[/cyan] <n>         Max commits to scan (default 50)\n\n"
+        "  [cyan]--commits, -c[/cyan] <n>         Max commits to scan (default 50)\n"
+        "  [cyan]--quiet, -q[/cyan]               Show only summary, save full report to file\n\n"
         "[bold]Examples:[/bold]\n"
         "  [dim]scan .[/dim]                          Scan current directory\n"
         "  [dim]scan src/ --severity HIGH[/dim]       Only HIGH+ findings\n"
@@ -310,6 +343,7 @@ def cmd_help(tokens: list[str]) -> None:
     table.add_row("  --severity/-s <level>",  "[dim]LOW | MEDIUM | HIGH | CRITICAL[/dim]")
     table.add_row("  --history/-H",           "[dim]Include Git history[/dim]")
     table.add_row("  --commits/-c <n>",       "[dim]Max commits (default 50)[/dim]")
+    table.add_row("  --quiet/-q",             "[dim]Summary only, report to file[/dim]")
     table.add_row("", "")
     table.add_row("set <key> <value>",        "Change session settings")
     table.add_row("config <show|path|init|set>", "Manage persistent config")

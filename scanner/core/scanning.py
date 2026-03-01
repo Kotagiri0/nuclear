@@ -20,12 +20,14 @@ def scan_file(filepath: str) -> list:
     return scan_content(content, filepath)
 
 
-def scan_directory(root: str) -> list:
+def scan_directory(root: str, on_file=None) -> list:
     findings = []
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
         for filename in filenames:
             filepath = os.path.join(dirpath, filename)
+            if on_file is not None:
+                on_file(filepath)
             findings.extend(scan_file(filepath))
     return findings
 
@@ -53,7 +55,10 @@ def scan_zip(zip_path: str) -> list:
                 finding.file = member
             findings.extend(file_findings)
     finally:
-        shutil.rmtree(tmp_dir, ignore_errors=True)
+        try:
+            shutil.rmtree(tmp_dir)
+        except OSError:
+            pass
 
     return findings
 
@@ -67,6 +72,7 @@ def _run_git(args: list, cwd: str) -> str:
         text=True,
         encoding="utf-8",
         errors="ignore",
+        timeout=30,
     )
     if result.returncode != 0:
         return ""
@@ -84,6 +90,7 @@ def scan_git_history(repo_path: str, max_commits: int = 50) -> list:
         return []
 
     findings = []
+    seen_blobs = set()
     for commit in commit_ids:
         tree = _run_git(["ls-tree", "-r", "--name-only", commit], cwd=repo_path)
         files = [p.strip() for p in tree.splitlines() if p.strip()]
@@ -93,6 +100,12 @@ def scan_git_history(repo_path: str, max_commits: int = 50) -> list:
                 continue
             if any(part in SKIP_DIRS for part in Path(rel_path).parts):
                 continue
+
+            # Cache by blob hash to avoid re-scanning identical content
+            blob_hash = _run_git(["rev-parse", f"{commit}:{rel_path}"], cwd=repo_path).strip()
+            if blob_hash in seen_blobs:
+                continue
+            seen_blobs.add(blob_hash)
 
             blob = _run_git(["show", f"{commit}:{rel_path}"], cwd=repo_path)
             if not blob:

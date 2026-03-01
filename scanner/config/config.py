@@ -7,6 +7,8 @@ Priority: CLI flags > ENV variables > config.toml > built-in defaults
 from __future__ import annotations
 
 import os
+import re
+import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
@@ -119,9 +121,7 @@ def load_config(path: Optional[Path] = None) -> NuclearConfig:
     if cfg_path.exists():
         try:
             raw = _load_toml(cfg_path)
-        except Exception:
-            # Malformed TOML — warn and fall back to defaults
-            import warnings
+        except Exception:  # noqa: BLE001 — tomllib raises various errors
             warnings.warn(
                 f"[nuclear] Could not parse config file {cfg_path!s}; using defaults.",
                 stacklevel=2,
@@ -136,6 +136,15 @@ def load_config(path: Optional[Path] = None) -> NuclearConfig:
     custom_patterns: list[CustomPattern] = []
     for p in patterns_section.get("custom", []):
         if "name" in p and "regex" in p:
+            # Validate regex before accepting
+            try:
+                re.compile(p["regex"])
+            except re.error as exc:
+                warnings.warn(
+                    f"[nuclear] Invalid regex in custom pattern '{p['name']}': {exc}; skipping.",
+                    stacklevel=2,
+                )
+                continue
             custom_patterns.append(
                 CustomPattern(
                     name=p["name"],

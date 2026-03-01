@@ -26,7 +26,8 @@ def _download_url(url: str, out_dir: str) -> str:
     parsed = urllib.parse.urlparse(url)
     filename = Path(parsed.path).name or "downloaded_target"
     destination = Path(out_dir) / filename
-    urllib.request.urlretrieve(url, destination)
+    with urllib.request.urlopen(url, timeout=60) as resp:
+        destination.write_bytes(resp.read())
     return str(destination)
 
 
@@ -40,7 +41,7 @@ def _clone_git_repo(url: str, out_dir: str, shallow: bool = True) -> str:
     if shallow:
         args = ["git", "clone", "--depth", "1", url, str(dst)]
 
-    result = subprocess.run(args, capture_output=True, text=True, check=False)
+    result = subprocess.run(args, capture_output=True, text=True, check=False, timeout=120)
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or "Ошибка клонирования git-репозитория")
     return str(dst)
@@ -78,4 +79,7 @@ def scan_remote_source(url: str, scan_history: bool = False, history_commits: in
             findings.extend(scan_file(downloaded))
         return findings, downloaded, source_kind
     finally:
-        shutil.rmtree(tmp_dir, ignore_errors=True)
+        try:
+            shutil.rmtree(tmp_dir)
+        except OSError:
+            pass

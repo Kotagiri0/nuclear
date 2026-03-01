@@ -13,9 +13,10 @@ import time
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.history import InMemoryHistory
 
-from scanner.config import load_config
+from prompt_toolkit.history import FileHistory
+
+from scanner.config import load_config, CONFIG_DIR
 from scanner.repl.commands import cmd_config, cmd_help, cmd_history, cmd_scan, cmd_set
 from scanner.repl.completer import NuclearCompleter
 from scanner.repl.ui import banner, console, session_summary, status_table, PROMPT_STYLE
@@ -46,8 +47,10 @@ def run() -> None:
     banner()
 
     completer = NuclearCompleter()
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    history_file = CONFIG_DIR / "history"
     session: PromptSession = PromptSession(
-        history=InMemoryHistory(),
+        history=FileHistory(str(history_file)),
         auto_suggest=AutoSuggestFromHistory(),
         completer=completer,
         style=PROMPT_STYLE,
@@ -59,7 +62,7 @@ def run() -> None:
     while True:
         try:
             raw = session.prompt(
-                [("class:prompt.sign", "☢ "), ("class:prompt", "nuclear"), ("", " > ")],
+                [("class:prompt.sign", "☢ "), ("class:prompt", "nuclear"), ("class:prompt.path", " > ")],
             )
         except KeyboardInterrupt:
             now = time.time()

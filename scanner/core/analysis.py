@@ -222,29 +222,10 @@ def scan_content(content: str, filepath: str, source: str = "current") -> list:
                 if is_false_positive(value):
                     continue
 
-                score = base_score
-                entropy = shannon_entropy(value)
-
-                if is_likely_hash(value):
-                    score -= 3
-
-                if entropy > 4.5:
-                    score += 3
-                elif entropy > 3.5:
-                    score += 1
-
-                ctx = has_context(lines, i)
-                if ctx:
-                    score += 2
-
-                if ext in HIGH_ENTROPY_FILE_TYPES:
-                    score += 2
-                if ext == ".env":
-                    score += 1
-
-                struct_valid = validate_structure(secret_type, value)
-                if struct_valid:
-                    score += 3
+                score, entropy, ctx, struct_valid = _score_match(
+                    value, secret_type, lines, i, ext,
+                    base_score,
+                )
 
                 if score < 2:
                     continue
@@ -272,6 +253,54 @@ def scan_content(content: str, filepath: str, source: str = "current") -> list:
                     )
                 )
 
+    _apply_taint_and_confidence(findings, content, filepath, ext, secret_vars)
+    return findings
+
+
+def _score_match(
+    value: str,
+    secret_type: str,
+    lines: list,
+    idx: int,
+    ext: str,
+    base_score: int,
+) -> tuple[int, float, bool, bool]:
+    """Score a single match. Returns (score, entropy, context_match, structural_valid)."""
+    score = base_score
+    entropy = shannon_entropy(value)
+
+    if is_likely_hash(value):
+        score -= 3
+
+    if entropy > 4.5:
+        score += 3
+    elif entropy > 3.5:
+        score += 1
+
+    ctx = has_context(lines, idx)
+    if ctx:
+        score += 2
+
+    if ext in HIGH_ENTROPY_FILE_TYPES:
+        score += 2
+    if ext == ".env":
+        score += 1
+
+    struct_valid = validate_structure(secret_type, value)
+    if struct_valid:
+        score += 3
+
+    return score, entropy, ctx, struct_valid
+
+
+def _apply_taint_and_confidence(
+    findings: list,
+    content: str,
+    filepath: str,
+    ext: str,
+    secret_vars: list,
+) -> None:
+    """Run taint analysis and compute confidence for all findings in-place."""
     if secret_vars and ext in {".py", ".js", ".ts", ".rb", ".go", ".java", ".php"}:
         traces = taint_analysis(content, filepath, secret_vars)
         for finding in findings:
@@ -299,5 +328,3 @@ def scan_content(content: str, filepath: str, source: str = "current") -> list:
                 struct_valid=finding.structural_valid,
                 tainted=False,
             )
-
-    return findings
