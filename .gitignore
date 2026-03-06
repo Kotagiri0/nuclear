@@ -18,3 +18,4 @@ Thumbs.db
 # Nuclear scan reports
 .nuclear-scan-result
 .workspace/
+.pdf
