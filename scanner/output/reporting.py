@@ -1,6 +1,15 @@
 import json
 
 
+def _is_ai_finding(finding) -> bool:
+    """True if this finding comes from LLM/AI security scan."""
+    return (
+        finding.secret_type == "AI Security"
+        or finding.category == "ai_security"
+        or (finding.source and str(finding.source).startswith("ai:"))
+    )
+
+
 def deduplicate(findings: list) -> list:
     seen = set()
     result = []
@@ -58,6 +67,7 @@ def _json_report(findings: list) -> str:
                 "type": finding.secret_type,
                 "category": finding.category,
                 "source": finding.source,
+                "ai_detection": _is_ai_finding(finding),
                 "severity": finding.severity,
                 "score": finding.score,
                 "confidence": finding.confidence,
@@ -82,7 +92,7 @@ def _sarif_report(findings: list) -> str:
             "name": finding.secret_type,
             "shortDescription": {"text": finding.secret_type},
             "fullDescription": {"text": f"Detected potential secret: {finding.secret_type}"},
-            "properties": {"category": finding.category},
+            "properties": {"category": finding.category, "ai_detection": _is_ai_finding(finding)},
         }
         level = "warning"
         if finding.severity in {"HIGH", "CRITICAL"}:
@@ -96,6 +106,7 @@ def _sarif_report(findings: list) -> str:
                     "text": (
                         f"{finding.secret_type} ({finding.severity}) at {finding.file}:{finding.line_number}; "
                         f"confidence={finding.confidence}"
+                        + (" [LLM]" if _is_ai_finding(finding) else "")
                     )
                 },
                 "locations": [
@@ -147,7 +158,8 @@ def _text_report(findings: list) -> str:
 
     for finding in findings:
         color = severity_colors.get(finding.severity, "")
-        out.append(f"{bold}{color}[{finding.severity}]{reset} {finding.secret_type} ({finding.category})")
+        ai_tag = " 🤖 ML" if _is_ai_finding(finding) else ""
+        out.append(f"{bold}{color}[{finding.severity}]{reset} {finding.secret_type} ({finding.category}){ai_tag}")
         out.append(f"  📁 File   : {finding.file}:{finding.line_number}")
         mv = finding.matched_value
         mv_display = (mv[:60] + "...") if len(mv) > 60 else mv
@@ -186,6 +198,10 @@ def _text_report(findings: list) -> str:
         out.append(
             f"\n  {severity_colors['CRITICAL']}⚠  Secrets actively used in dangerous sinks: {tainted_count}{reset}"
         )
+
+    ai_count = sum(1 for finding in findings if _is_ai_finding(finding))
+    if ai_count:
+        out.append(f"\n  🤖 Findings from LLM check: {ai_count}")
 
     return "\n".join(out)
 

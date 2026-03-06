@@ -24,7 +24,16 @@ def _build_summary(findings: list[Any]) -> dict[str, int]:
     return summary
 
 
+def _is_ai_finding(finding: Any) -> bool:
+    return (
+        getattr(finding, "secret_type", None) == "AI Security"
+        or getattr(finding, "category", None) == "ai_security"
+        or (getattr(finding, "source", None) and str(finding.source).startswith("ai:"))
+    )
+
+
 def _finding_to_dict(finding: Any, include_recommendations: bool) -> dict[str, Any]:
+    is_ai = _is_ai_finding(finding)
     item: dict[str, Any] = {
         "file": finding.file,
         "line": finding.line_number,
@@ -35,6 +44,8 @@ def _finding_to_dict(finding: Any, include_recommendations: bool) -> dict[str, A
         "category": finding.category,
         "value": finding.matched_value[:80],
         "line_content": finding.line_content.strip(),
+        "ai_detection": is_ai,
+        "detector": "llm" if is_ai else "patterns",
     }
     if include_recommendations:
         rec = get_recommendation(finding.secret_type)
@@ -101,6 +112,7 @@ def _parse_scan_request(payload: Any, default_target: str) -> dict[str, Any]:
 
     scan_history = _parse_bool(payload.get("scan_history"), "scan_history")
     include_recommendations = _parse_bool(payload.get("recommendations"), "recommendations")
+    ai_security = _parse_bool(payload.get("ai_security"), "ai_security")
     exclude = _normalize_globs(payload.get("exclude"), "exclude")
     include = _normalize_globs(payload.get("include"), "include")
 
@@ -116,6 +128,7 @@ def _parse_scan_request(payload: Any, default_target: str) -> dict[str, Any]:
         "scan_history": scan_history,
         "history_commits": history_commits,
         "include_recommendations": include_recommendations,
+        "ai_security": ai_security,
         "exclude": exclude,
         "include": include,
     }
@@ -665,6 +678,10 @@ def _render_index() -> bytes:
           <input id="recommendations" type="checkbox" />
           <span>Добавить рекомендации</span>
         </label>
+        <label class="check-item" for="ai_security">
+          <input id="ai_security" type="checkbox" />
+          <span>Сканировать с LLM (требует NUCLEAR_NVIDIA_API_KEY в .env)</span>
+        </label>
       </div>
 
       <div class="actions">
@@ -769,7 +786,8 @@ def _render_index() -> bytes:
         min_severity: document.getElementById("severity").value,
         scan_history: document.getElementById("scan_history").checked,
         history_commits: Number(document.getElementById("history_commits").value || "50"),
-        recommendations: document.getElementById("recommendations").checked
+        recommendations: document.getElementById("recommendations").checked,
+        ai_security: document.getElementById("ai_security").checked
       };
 
       try {
@@ -795,8 +813,11 @@ def _render_index() -> bytes:
       const rows = document.getElementById("rows");
       rows.innerHTML = "";
 
-      document.getElementById("summary").textContent =
-        "Найдено: " + data.total + " | Время сканирования: " + data.elapsed_ms + " мс";
+      let summaryText = "Найдено: " + data.total + " | Время сканирования: " + data.elapsed_ms + " мс";
+      if ((data.ai_findings || 0) > 0) {
+        summaryText += " | 🤖 LLM: " + data.ai_findings;
+      }
+      document.getElementById("summary").textContent = summaryText;
       document.getElementById("c_critical").textContent = data.summary.CRITICAL || 0;
       document.getElementById("c_high").textContent = data.summary.HIGH || 0;
       document.getElementById("c_medium").textContent = data.summary.MEDIUM || 0;
@@ -817,9 +838,10 @@ def _render_index() -> bytes:
           ? Number(f.confidence).toFixed(2)
           : escapeHtml(f.confidence);
 
+        const mlTag = f.ai_detection ? ' <span title="ML/LLM detection">🤖 ML</span>' : '';
         tr.innerHTML = `
           <td><span class="sev-badge ${sevClass(f.severity)}">${escapeHtml(f.severity)}</span></td>
-          <td>${escapeHtml(f.type)}</td>
+          <td>${escapeHtml(f.type)}${mlTag}</td>
           <td class="cell-file">${escapeHtml(f.file)}:${f.line}</td>
           <td class="cell-value">${escapeHtml(f.value)}</td>
           <td>${score}</td>
@@ -891,6 +913,12 @@ class _Handler(BaseHTTPRequestHandler):
             return
 
         try:
+            ai_security_cfg = None
+            if params.get("ai_security"):
+                from scanner.ai.security import AISecurityConfig
+
+                ai_security_cfg = AISecurityConfig(max_files=30)
+
             started = time.monotonic()
             findings = run_scan(
                 target=params["target"],
@@ -898,6 +926,7 @@ class _Handler(BaseHTTPRequestHandler):
                 min_severity=params["min_severity"],
                 scan_history=params["scan_history"],
                 history_commits=params["history_commits"],
+                ai_security_cfg=ai_security_cfg,
                 exclude=params["exclude"],
                 include=params["include"],
             )
@@ -908,11 +937,13 @@ class _Handler(BaseHTTPRequestHandler):
 
         findings.sort(key=lambda finding: (-finding.score, finding.file, finding.line_number))
         serialized = [_finding_to_dict(finding, params["include_recommendations"]) for finding in findings]
+        ai_count = sum(1 for f in findings if _is_ai_finding(f))
         self._json(
             HTTPStatus.OK,
             {
                 "total": len(serialized),
                 "summary": _build_summary(findings),
+                "ai_findings": ai_count,
                 "elapsed_ms": elapsed_ms,
                 "findings": serialized,
             },
