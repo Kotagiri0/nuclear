@@ -19,6 +19,7 @@ def run_scan(
     history_commits: int = 50,
     exclude: list[str] | None = None,
     include: list[str] | None = None,
+    ai_security_cfg=None,
     on_file=None,
 ) -> list:
     """Perform a scan and return filtered findings.
@@ -70,6 +71,8 @@ def run_scan(
             url,
             scan_history=scan_history,
             history_commits=history_commits,
+            ai_security_cfg=ai_security_cfg,
+            file_filter=_file_filter if (exclude or include) else None,
         )
     else:
         path = Path(target)  # type: ignore[arg-type]
@@ -77,13 +80,25 @@ def run_scan(
             raise FileNotFoundError(f"Path does not exist: {target!r}")
 
         if path.suffix.lower() == ".zip":
-            findings = scan_zip(str(path))
+            findings = scan_zip(
+                str(path),
+                ai_security_cfg=ai_security_cfg,
+                file_filter=_file_filter if (exclude or include) else None,
+            )
         elif path.is_dir():
-            findings = scan_directory(str(path), on_file=_on_file_wrapper)
+            findings = scan_directory(
+                str(path),
+                on_file=_on_file_wrapper,
+                ai_security_cfg=ai_security_cfg,
+                file_filter=_file_filter if (exclude or include) else None,
+            )
             if scan_history and (path / ".git").exists():
                 findings.extend(scan_git_history(str(path), max_commits=history_commits))
         else:
-            findings = scan_file(str(path))
+            if _file_filter(str(path)):
+                findings = scan_file(str(path), ai_security_cfg=ai_security_cfg)
+            else:
+                findings = []
 
     # Apply exclude/include filters to findings
     if exclude or include:

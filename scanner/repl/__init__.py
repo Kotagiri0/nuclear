@@ -42,6 +42,13 @@ def run() -> None:
     # Ensure stdout supports Unicode on Windows
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    # Load local .env (if present)
+    try:
+        from scanner.config import load_dotenv
+
+        load_dotenv()
+    except Exception:
+        pass
 
     state = _build_state()
     banner()

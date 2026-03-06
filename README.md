@@ -66,6 +66,23 @@ tests/
 pip install -r requirements.txt
 ```
 
+## Опционально: AI-сканирование безопасности кода (NVIDIA Qwen)
+
+По умолчанию сканер работает полностью локально. Если вы хотите включить дополнительную проверку кода через LLM:
+
+```bash
+pip install -e ".[ai]"
+# Можно либо экспортнуть ключ, либо положить его в .env (см. .env.example)
+export NUCLEAR_NVIDIA_API_KEY="...ваш ключ..."
+nuclear-scan . --ai-security
+```
+
+Можно явно указать модель/эндпоинт:
+
+```bash
+nuclear-scan . --ai-security --ai-model "qwen2.5-coder-32b-instruct" --ai-base-url "https://integrate.api.nvidia.com/v1"
+```
+
 ## Локальный запуск
 
 ```bash

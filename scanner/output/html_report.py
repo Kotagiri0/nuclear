@@ -36,6 +36,13 @@ def generate_html_report(findings: list, target: str = "") -> str:
     for f in findings:
         counts[f.severity] = counts.get(f.severity, 0) + 1
 
+    def _is_ai(f) -> bool:
+        return (
+            f.secret_type == "AI Security"
+            or f.category == "ai_security"
+            or (f.source and str(f.source).startswith("ai:"))
+        )
+
     rows_html = ""
     for idx, f in enumerate(findings, 1):
         color = _severity_color(f.severity)
@@ -43,6 +50,8 @@ def generate_html_report(findings: list, target: str = "") -> str:
         val_escaped = html.escape(f.matched_value[:60])
         file_escaped = html.escape(str(f.file))
         type_escaped = html.escape(f.secret_type)
+        if _is_ai(f):
+            type_escaped += ' <span class="ml-badge" title="ML/LLM detection">🤖 ML</span>'
         line_escaped = html.escape(f.line_content.strip()[:120])
 
         traces_html = ""
@@ -109,6 +118,7 @@ td {{ padding:10px 12px; border-bottom:1px solid #f1f5f9; font-size:14px; }}
 .finding-row {{ cursor:pointer; transition:background .15s; }}
 .finding-row:hover {{ background:#f8fafc; }}
 .badge {{ padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600; letter-spacing:.5px; }}
+.ml-badge {{ font-size:10px; color:#6366f1; margin-left:4px; }}
 .idx {{ color:#94a3b8; width:40px; }}
 .file {{ max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }}
 .value {{ max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:monospace; font-size:12px; }}
@@ -193,6 +203,11 @@ def save_html_report(findings: list, target: str = "", output_dir: str = ".nucle
             "value": f.matched_value,
             "category": f.category,
             "source": f.source,
+            "ai_detection": (
+                f.secret_type == "AI Security"
+                or f.category == "ai_security"
+                or (f.source and str(f.source).startswith("ai:"))
+            ),
         })
     json_path = out / "data.json"
     json_path.write_text(json.dumps({"total": len(findings), "findings": data}, indent=2), encoding="utf-8")

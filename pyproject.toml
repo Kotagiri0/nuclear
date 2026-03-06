@@ -15,6 +15,11 @@ dependencies = [
     "prompt_toolkit>=3.0.43",
 ]
 
+[project.optional-dependencies]
+ai = [
+    "openai>=1.40.0",
+]
+
 [project.scripts]
 nuclear-scan = "scanner.cli.main:main"
 nuclear = "scanner.repl:run"

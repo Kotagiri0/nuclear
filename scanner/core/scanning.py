@@ -9,7 +9,7 @@ from scanner.core.analysis import scan_content
 from scanner.core.patterns import SKIP_DIRS, SKIP_EXTENSIONS
 
 
-def scan_file(filepath: str) -> list:
+def scan_file(filepath: str, *, ai_security_cfg=None, ai_security_state=None) -> list:
     path = Path(filepath)
     if path.suffix.lower() in SKIP_EXTENSIONS:
         return []
@@ -17,22 +17,77 @@ def scan_file(filepath: str) -> list:
         content = path.read_text(encoding="utf-8", errors="ignore")
     except (OSError, PermissionError):
         return []
-    return scan_content(content, filepath)
+    findings = scan_content(content, filepath)
+    if ai_security_cfg is not None:
+        ext = path.suffix.lower()
+        is_dotfile = path.name.startswith(".")
+        ai_allowed_exts = {
+            ".py",
+            ".js",
+            ".ts",
+            ".tsx",
+            ".jsx",
+            ".java",
+            ".go",
+            ".rb",
+            ".php",
+            ".cs",
+            ".rs",
+            ".sh",
+            ".bash",
+            ".ps1",
+            ".sql",
+        }
+        # Never send env/secrets/config dotfiles to an external LLM.
+        if is_dotfile or ext not in ai_allowed_exts:
+            return findings
+
+        from scanner.ai.security import AISecurityError, looks_risky_code_for_llm, scan_code_security
+
+        # Optional performance controls: skip clearly safe files unless explicitly requested.
+        if not getattr(ai_security_cfg, "scan_all_files", False) and not looks_risky_code_for_llm(content):
+            return findings
+
+        # Optional hard cap on number of LLM calls (per scan run).
+        max_files = int(getattr(ai_security_cfg, "max_files", 0) or 0)
+        if max_files > 0:
+            if ai_security_state is None:
+                ai_security_state = {"scanned": 0}
+            if ai_security_state.get("scanned", 0) >= max_files:
+                return findings
+
+        try:
+            findings.extend(scan_code_security(content, filepath=filepath, cfg=ai_security_cfg))
+            if ai_security_state is not None:
+                ai_security_state["scanned"] = ai_security_state.get("scanned", 0) + 1
+        except AISecurityError:
+            # AI was explicitly enabled; surface the error to the caller/CLI.
+            raise
+    return findings
 
 
-def scan_directory(root: str, on_file=None) -> list:
+def scan_directory(root: str, on_file=None, *, ai_security_cfg=None, file_filter=None) -> list:
     findings = []
+    ai_security_state = {"scanned": 0} if ai_security_cfg is not None else None
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
         for filename in filenames:
             filepath = os.path.join(dirpath, filename)
+            if file_filter is not None and not file_filter(filepath):
+                continue
             if on_file is not None:
                 on_file(filepath)
-            findings.extend(scan_file(filepath))
+            findings.extend(
+                scan_file(
+                    filepath,
+                    ai_security_cfg=ai_security_cfg,
+                    ai_security_state=ai_security_state,
+                )
+            )
     return findings
 
 
-def scan_zip(zip_path: str) -> list:
+def scan_zip(zip_path: str, *, ai_security_cfg=None, file_filter=None) -> list:
     findings = []
     tmp_dir = tempfile.mkdtemp(prefix="secret_scanner_")
     try:
@@ -47,10 +102,12 @@ def scan_zip(zip_path: str) -> list:
             zf.extractall(tmp_dir, members=members)
 
         for member in members:
+            if file_filter is not None and not file_filter(member):
+                continue
             extracted_path = os.path.join(tmp_dir, member)
             if not os.path.isfile(extracted_path):
                 continue
-            file_findings = scan_file(extracted_path)
+            file_findings = scan_file(extracted_path, ai_security_cfg=ai_security_cfg)
             for finding in file_findings:
                 finding.file = member
             findings.extend(file_findings)
