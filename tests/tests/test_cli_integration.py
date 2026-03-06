@@ -43,7 +43,7 @@ class TestCLIBasic:
 
     def test_secret_file_exits_1_with_fail_on_low(self, tmp_path):
         f = tmp_path / "vuln.py"
-        f.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        f.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         result = _run_cli(str(f), "--fail-on", "LOW")
         assert result.returncode == 1
 
@@ -61,7 +61,7 @@ class TestCLIBasic:
 class TestCLIFormats:
     def test_json_format_is_valid_json(self, tmp_path):
         f = tmp_path / "vuln.py"
-        f.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        f.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         result = _run_cli(str(f), "--format", "json")
         data = json.loads(result.stdout)
         assert "findings" in data
@@ -69,7 +69,7 @@ class TestCLIFormats:
 
     def test_sarif_format_is_valid_sarif(self, tmp_path):
         f = tmp_path / "vuln.py"
-        f.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        f.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         result = _run_cli(str(f), "--format", "sarif")
         data = json.loads(result.stdout)
         assert "runs" in data
@@ -77,7 +77,7 @@ class TestCLIFormats:
 
     def test_text_format_contains_severity_label(self, tmp_path):
         f = tmp_path / "vuln.py"
-        f.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        f.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         result = _run_cli(str(f), "--format", "text", "--min-severity", "LOW")
         assert any(sev in result.stdout for sev in ("HIGH", "CRITICAL", "MEDIUM", "LOW"))
 
@@ -87,7 +87,7 @@ class TestCLIFormats:
 class TestCLISeverity:
     def test_min_severity_critical_filters_lower(self, tmp_path):
         f = tmp_path / "vuln.py"
-        f.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        f.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         all_result = _run_cli(str(f), "--format", "json", "--min-severity", "LOW")
         crit_result = _run_cli(str(f), "--format", "json", "--min-severity", "CRITICAL")
         all_data = json.loads(all_result.stdout)
@@ -96,7 +96,7 @@ class TestCLISeverity:
 
     def test_fail_on_high_exits_1_for_critical_finding(self, tmp_path):
         f = tmp_path / "vuln.py"
-        f.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        f.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         result = _run_cli(str(f), "--fail-on", "HIGH", "--min-severity", "LOW")
         # AWS key should be HIGH or CRITICAL → exit 1
         assert result.returncode == 1
@@ -117,7 +117,7 @@ class TestCLIZip:
         import zipfile
         zf_path = tmp_path / "archive.zip"
         with zipfile.ZipFile(zf_path, "w") as zf:
-            zf.writestr("config.py", "AKIAJX7LKQHMBQWRFP2A\n")
+            zf.writestr("config.py", "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n")
         result = _run_cli(str(zf_path), "--format", "json")
         data = json.loads(result.stdout)
         assert data["total"] >= 1
@@ -128,7 +128,7 @@ class TestCLIZip:
 class TestCLIOutputFile:
     def test_output_writes_to_file(self, tmp_path):
         vuln = tmp_path / "vuln.py"
-        vuln.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        vuln.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         out = tmp_path / "report.json"
         result = _run_cli(str(vuln), "--format", "json", "--output", str(out))
         assert out.exists()
@@ -137,7 +137,7 @@ class TestCLIOutputFile:
 
     def test_output_file_has_no_stdout(self, tmp_path):
         vuln = tmp_path / "vuln.py"
-        vuln.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        vuln.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         out = tmp_path / "report.json"
         result = _run_cli(str(vuln), "--format", "json", "--output", str(out))
         # stdout should be empty when writing to file
@@ -145,7 +145,7 @@ class TestCLIOutputFile:
 
     def test_output_creates_parent_dirs(self, tmp_path):
         vuln = tmp_path / "vuln.py"
-        vuln.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        vuln.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         out = tmp_path / "sub" / "dir" / "report.json"
         _run_cli(str(vuln), "--format", "json", "--output", str(out))
         assert out.exists()

@@ -254,7 +254,7 @@ class TestCLIArgs:
 
     def test_cli_exits_nonzero_on_secret(self, tmp_path):
         f = tmp_path / "vuln.py"
-        f.write_text("API_KEY='AKIAJX7LKQHMBQWRFP2A'\n", encoding="utf-8")
+        f.write_text("API_KEY='AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n", encoding="utf-8")
         result = subprocess.run(
             [sys.executable, "-m", "scanner.cli", str(f), "--fail-on", "LOW"],
             capture_output=True, text=True
@@ -263,7 +263,7 @@ class TestCLIArgs:
 
     def test_cli_json_output_is_valid_json(self, tmp_path):
         f = tmp_path / "vuln.py"
-        f.write_text("API_KEY='AKIAJX7LKQHMBQWRFP2A'\n", encoding="utf-8")
+        f.write_text("API_KEY='AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n", encoding="utf-8")
         result = subprocess.run(
             [sys.executable, "-m", "scanner.cli", str(f), "--format", "json"],
             capture_output=True, text=True
@@ -282,7 +282,7 @@ class TestTaintDeepChains:
 
     def test_chain_a_b_c_to_sink(self):
         content = """\
-a = 'AKIAJX7LKQHMBQWRFP2A'
+a = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'
 b = a
 c = b
 requests.get('https://api.example.com', headers={'key': c})
@@ -295,7 +295,7 @@ requests.get('https://api.example.com', headers={'key': c})
 
     def test_multiple_sinks_detected(self):
         content = """\
-token = 'ghp_mNpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvW'
+token = 'vkxK9mZ2qR7nL5pT0wYcD8eF1gH3jB6vN'
 logging.info(token)
 requests.post('https://api.com', data={'t': token})
 """
@@ -305,7 +305,7 @@ requests.post('https://api.com', data={'t': token})
 
     def test_no_taint_when_var_not_in_sink(self):
         content = """\
-secret = 'AKIAJX7LKQHMBQWRFP2A'
+secret = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'
 other = 'hello'
 print(other)
 """
@@ -314,7 +314,7 @@ print(other)
 
     def test_propagation_recorded_in_steps(self):
         content = """\
-key = 'AKIAJX7LKQHMBQWRFP2A'
+key = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'
 derived = key
 requests.get('https://api.example.com', params={'k': derived})
 """
@@ -329,7 +329,7 @@ requests.get('https://api.example.com', params={'k': derived})
 
     def test_source_file_matches_sink_file(self):
         content = """\
-pw = 'SuperSecret123!'
+pw = 'ozon_api_xK9mZ2qR7nL5pT0wY4cD8eF1'
 subprocess.run(['curl', pw])
 """
         traces = taint_analysis(content, "deploy.py", [("pw", 1)])
@@ -339,7 +339,7 @@ subprocess.run(['curl', pw])
 
     def test_taint_with_logging_sink(self):
         content = """\
-api_key = 'AKIAJX7LKQHMBQWRFP2A'
+api_key = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'
 logging.warning(api_key)
 """
         traces = taint_analysis(content, "app.py", [("api_key", 1)])
@@ -347,7 +347,7 @@ logging.warning(api_key)
 
     def test_scan_content_taint_boosts_severity(self):
         content = """\
-API_KEY = 'AKIAJX7LKQHMBQWRFP2A'
+API_KEY = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'
 import requests
 requests.get('https://api.example.com', headers={'X-Key': API_KEY})
 """
@@ -377,9 +377,9 @@ class TestZipAdvanced:
 
     def test_multiple_secrets_in_zip(self, tmp_path):
         zf = self._make_zip(tmp_path, {
-            "a.py": "API_KEY='AKIAJX7LKQHMBQWRFP2A'\n",
-            "b.py": "TOKEN='ghp_mNpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvW'\n",
-            "c.env": "DB_PASSWORD='UltraSecret_456!'\n",
+            "a.py": "API_KEY='AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n",
+            "b.py": "TOKEN='vkxK9mZ2qR7nL5pT0wYcD8eF1gH3jB6vN'\n",
+            "c.env": "DB_PASSWORD='sber_test_xK9mZ2qR7nL5pT0wY4cD8eF'\n",
         })
         findings = scan_zip(zf)
         types = {f.secret_type for f in findings}
@@ -387,8 +387,8 @@ class TestZipAdvanced:
 
     def test_zip_skips_binary_extensions(self, tmp_path):
         zf = self._make_zip(tmp_path, {
-            "image.jpg": "AKIAJX7LKQHMBQWRFP2A",
-            "font.ttf": "ghp_mNpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvW",
+            "image.jpg": "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe",
+            "font.ttf": "vkxK9mZ2qR7nL5pT0wYcD8eF1gH3jB6vN",
             "safe.py": "print('ok')\n",
         })
         findings = scan_zip(zf)
@@ -398,7 +398,7 @@ class TestZipAdvanced:
 
     def test_zip_nested_directory_structure(self, tmp_path):
         zf = self._make_zip(tmp_path, {
-            "project/src/config.py": "SECRET_KEY='AKIAJX7LKQHMBQWRFP2A'\n",
+            "project/src/config.py": "SECRET_KEY='AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n",
             "project/README.md": "# safe readme\n",
         })
         findings = scan_zip(zf)
@@ -408,7 +408,7 @@ class TestZipAdvanced:
 
     def test_zip_skips_node_modules(self, tmp_path):
         zf = self._make_zip(tmp_path, {
-            "node_modules/lib/index.js": "const key='AKIAJX7LKQHMBQWRFP2A';\n",
+            "node_modules/lib/index.js": "const key='AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe';\n",
             "src/app.js": "console.log('safe');\n",
         })
         findings = scan_zip(zf)
@@ -481,7 +481,7 @@ class TestEntropyEdgeCases:
         assert e > 4.0
 
     def test_scan_content_env_file_gets_bonus(self):
-        content = "SECRET_KEY='UltraSecret_456!'\n"
+        content = "SECRET_KEY='sber_test_xK9mZ2qR7nL5pT0wY4cD8eF'\n"
         findings_env = scan_content(content, "config.env")
         findings_py = scan_content(content, "config.py")
         if findings_env and findings_py:

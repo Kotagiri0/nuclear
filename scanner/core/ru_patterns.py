@@ -1,38 +1,37 @@
+# Паттерны для поиска секретов российских сервисов
+# Поддерживаемые сервисы: Yandex Cloud, VK, Cloud.ru, Sber, Tinkoff, Ozon, Telegram
+
 PATTERNS = {
-    "AWS Access Key": (r"\bAKIA[0-9A-Z]{16}\b", 9, "api_key"),
-    "AWS Secret Key": (r"(?i)aws.{0,20}secret.{0,20}['\"][0-9a-zA-Z/+]{40}['\"]", 9, "api_secret"),
-    "GitHub Token": (r"\bghp_[a-zA-Z0-9]{36}\b", 9, "api_token"),
-    "GitHub OAuth": (r"\bgho_[a-zA-Z0-9]{36}\b", 8, "oauth_token"),
-    "GitHub App Token": (r"\bghs_[a-zA-Z0-9]{36}\b", 8, "app_token"),
-    "Slack Token": (r"\bxox[bpoa]-[0-9a-zA-Z\-]{10,48}\b", 8, "api_token"),
-    "Stripe Secret Key": (r"\bsk_live_[0-9a-zA-Z]{24,}\b", 9, "api_secret"),
-    "Stripe Publishable Key": (r"\bpk_live_[0-9a-zA-Z]{24,}\b", 5, "api_key"),
-    "Twilio Account SID": (r"\bAC[a-zA-Z0-9]{32}\b", 7, "account_id"),
-    "Twilio Auth Token": (r"\b[a-f0-9]{32}\b", 3, "api_secret"),
-    "Google API Key": (r"\bAIza[0-9A-Za-z\-_]{35,39}\b", 8, "api_key"),
-    "Google OAuth": (r"\b[0-9]+-[0-9A-Za-z_]{22,}\.apps\.googleusercontent\.com\b", 7, "oauth_client"),
-    "Private Key": (r"-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----", 10, "private_key"),
-    "JWT Token": (r"\beyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\b", 7, "jwt"),
-    "Bearer Token": (r"(?i)bearer\s+[a-zA-Z0-9_\-\.=]{20,}", 6, "bearer_token"),
-    "Basic Auth": (r"(?i)basic\s+[a-zA-Z0-9+/]{20,}={0,2}\b", 6, "basic_auth"),
-    "Telegram Bot Token": (r"\b\d{8,10}:[A-Za-z0-9_-]{33,}\b", 8, "bot_token"),
+    # ==================== YANDEX CLOUD ====================
     "Yandex Cloud OAuth Token": (r"\bt1\.[A-Za-z0-9_-]{128,}\b", 9, "oauth_token"),
     "Yandex Cloud IAM Token": (r"\beyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.t1\.[A-Za-z0-9_-]{64,}\b", 9, "iam_token"),
     "Yandex Cloud Service Account Key": (r"\bAQ[A-Za-z0-9_-]{38,}\b", 8, "service_account_key"),
+    
+    # ==================== VK (ВКонтакте) ====================
     "VK API Access Token": (r"\bvk[a-z0-9]{10,}[A-Za-z0-9_-]{10,}\b", 7, "api_token"),
     "VK API User Token": (r"(?i)vk_token\s*[=:]\s*['\"]?[a-f0-9]{40}['\"]?", 6, "user_token"),
     "VK API Service Token": (r"(?i)vk_api\s*[=:]\s*['\"]?[a-zA-Z0-9_-]{20,}['\"]?", 7, "service_token"),
+    
+    # ==================== CLOUD.RU ====================
     "Cloud.ru API Token": (r"\bcrp_[a-zA-Z0-9_-]{32,}\b", 8, "api_token"),
     "Cloud.ru Service Account": (r"\bcrsa_[a-zA-Z0-9_-]{32,}\b", 8, "service_account"),
+    
+    # ==================== SBER (Сбер) ====================
     "Sber ID Token": (r"\bsber_[a-zA-Z0-9_-]{24,}\b", 7, "oauth_token"),
     "Sber API Key": (r"(?i)sber[_-]?api[_-]?key\s*[=:]\s*['\"]?[a-zA-Z0-9_-]{20,}['\"]?", 7, "api_key"),
+    
+    # ==================== TINKOFF (Тинькофф) ====================
     "Tinkoff API Token": (r"\btinkoff_[a-zA-Z0-9_-]{28,}\b", 8, "api_token"),
     "Tinkoff Merchant Token": (r"\bmerchant_[a-zA-Z0-9_-]{32,}\b", 8, "merchant_token"),
+    
+    # ==================== OZON ====================
     "Ozon API Key": (r"(?i)api-key\s*[=:]\s*['\"]?[a-zA-Z0-9_-]{28,}['\"]?", 8, "api_key"),
     "Ozon Client ID": (r"(?i)client[_-]?id\s*[=:]\s*['\"]?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}['\"]?", 6, "client_id"),
-    "SendGrid API Key": (r"\bSG\.[a-zA-Z0-9_\-]{22}\.[a-zA-Z0-9_\-]{43,}\b", 9, "api_key"),
-    "Mailgun API Key": (r"\bkey-[a-zA-Z0-9]{32}\b", 7, "api_key"),
-    "HubSpot API Key": (r"\b[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\b", 3, "api_key"),
+    
+    # ==================== TELEGRAM ====================
+    "Telegram Bot Token": (r"\b\d{8,10}:[A-Za-z0-9_-]{33,}\b", 8, "bot_token"),
+    
+    # ==================== ОБЩИЕ ПАТТЕРНЫ ====================
     "Generic API Key": (r"(?i)api[_\-\s]?key\s*[=:]\s*['\"]?([a-zA-Z0-9_\-\.]{20,})['\"]?", 5, "api_key"),
     "Generic Secret": (r"(?i)(?:secret|password|passwd|pwd)\s*[=:]\s*['\"]([^'\"]{8,})['\"]", 5, "credential"),
     "Generic Token": (r"(?i)token\s*[=:]\s*['\"]([a-zA-Z0-9_\-\.]{16,})['\"]", 4, "api_token"),
@@ -41,11 +40,8 @@ PATTERNS = {
         8,
         "db_credential",
     ),
-    "Private IP in code": (
-        r"(?i)(?:host|server|endpoint)\s*[=:]\s*['\"]?(192\.168\.|10\.|172\.(?:1[6-9]|2[0-9]|3[01])\.)",
-        2,
-        "internal_endpoint",
-    ),
+    "Private Key": (r"-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----", 10, "private_key"),
+    "JWT Token": (r"\beyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\b", 7, "jwt"),
 }
 
 CONTEXT_KEYWORDS = [
@@ -65,6 +61,13 @@ CONTEXT_KEYWORDS = [
     "api_secret",
     "database_url",
     "connection_string",
+    "yandex",
+    "vk",
+    "sber",
+    "tinkoff",
+    "ozon",
+    "cloudru",
+    "telegram",
 ]
 
 IGNORE_PATTERNS = [
@@ -150,23 +153,4 @@ SINK_NAMES = {
     r"\bsqlalchemy\.": "Database query",
     r"\bsequelize\.": "Database query",
     r"\bexec\s*\(": "Dynamic code execution",
-}
-
-# Российские сервисы (для фильтрации --ru-only)
-RU_SERVICES_PATTERNS = {
-    "Yandex Cloud OAuth Token",
-    "Yandex Cloud IAM Token",
-    "Yandex Cloud Service Account Key",
-    "VK API Access Token",
-    "VK API User Token",
-    "VK API Service Token",
-    "Cloud.ru API Token",
-    "Cloud.ru Service Account",
-    "Sber ID Token",
-    "Sber API Key",
-    "Tinkoff API Token",
-    "Tinkoff Merchant Token",
-    "Ozon API Key",
-    "Ozon Client ID",
-    "Telegram Bot Token",
 }

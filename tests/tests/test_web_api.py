@@ -54,7 +54,7 @@ def test_health_and_index_endpoints():
 
 def test_scan_request_with_invalid_min_severity_returns_400(tmp_path):
     vuln = tmp_path / "vuln.py"
-    vuln.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+    vuln.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
 
     server, thread = _start_server(default_target=str(tmp_path))
     port = server.server_address[1]
@@ -71,7 +71,7 @@ def test_scan_request_with_invalid_min_severity_returns_400(tmp_path):
 
 def test_scan_request_with_invalid_history_commits_returns_400(tmp_path):
     vuln = tmp_path / "vuln.py"
-    vuln.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+    vuln.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
 
     server, thread = _start_server(default_target=str(tmp_path))
     port = server.server_address[1]
@@ -88,7 +88,7 @@ def test_scan_request_with_invalid_history_commits_returns_400(tmp_path):
 
 def test_scan_request_with_invalid_boolean_returns_400(tmp_path):
     vuln = tmp_path / "vuln.py"
-    vuln.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+    vuln.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
 
     server, thread = _start_server(default_target=str(tmp_path))
     port = server.server_address[1]
@@ -105,7 +105,7 @@ def test_scan_request_with_invalid_boolean_returns_400(tmp_path):
 
 def test_scan_request_with_both_target_and_url_returns_400(tmp_path):
     vuln = tmp_path / "vuln.py"
-    vuln.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+    vuln.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
 
     server, thread = _start_server(default_target=str(tmp_path))
     port = server.server_address[1]
@@ -125,7 +125,7 @@ def test_scan_request_with_both_target_and_url_returns_400(tmp_path):
 
 def test_scan_request_runs_on_default_target(tmp_path):
     vuln = tmp_path / "vuln.py"
-    vuln.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+    vuln.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
 
     server, thread = _start_server(default_target=str(tmp_path))
     port = server.server_address[1]

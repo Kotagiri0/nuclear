@@ -34,9 +34,9 @@ class TestRunScanErrors:
 class TestRunScanFile:
     def test_scans_file_with_secret(self, tmp_path):
         f = tmp_path / "config.py"
-        f.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        f.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         findings = run_scan(target=str(f))
-        assert any(fi.secret_type == "AWS Access Key" for fi in findings)
+        assert any(fi.secret_type == "Yandex Cloud Service Account Key" for fi in findings)
 
     def test_scans_clean_file_returns_empty(self, tmp_path):
         f = tmp_path / "clean.py"
@@ -45,7 +45,7 @@ class TestRunScanFile:
 
     def test_min_severity_filter_applied(self, tmp_path):
         f = tmp_path / "config.py"
-        f.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        f.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         all_findings = run_scan(target=str(f), min_severity="LOW")
         high_only = run_scan(target=str(f), min_severity="CRITICAL")
         # CRITICAL filter may return fewer results
@@ -56,9 +56,9 @@ class TestRunScanFile:
 
 class TestRunScanDirectory:
     def test_scans_directory(self, tmp_path):
-        (tmp_path / "a.py").write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        (tmp_path / "a.py").write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         findings = run_scan(target=str(tmp_path))
-        assert any(fi.secret_type == "AWS Access Key" for fi in findings)
+        assert any(fi.secret_type == "Yandex Cloud Service Account Key" for fi in findings)
 
     def test_empty_directory_returns_empty(self, tmp_path):
         assert run_scan(target=str(tmp_path)) == []
@@ -66,7 +66,7 @@ class TestRunScanDirectory:
     def test_scan_history_on_git_repo(self, tmp_path):
         repo = tmp_path / "repo"
         repo.mkdir()
-        (repo / "app.py").write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        (repo / "app.py").write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
         subprocess.run(["git", "config", "user.email", "t@t.com"], cwd=repo, check=True, capture_output=True)
         subprocess.run(["git", "config", "user.name", "t"], cwd=repo, check=True, capture_output=True)
@@ -93,9 +93,9 @@ class TestRunScanZip:
         return zf_path
 
     def test_scans_zip_file(self, tmp_path):
-        zf = self._make_zip(tmp_path, {"config.py": "AKIAJX7LKQHMBQWRFP2A\n"})
+        zf = self._make_zip(tmp_path, {"config.py": "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n"})
         findings = run_scan(target=str(zf))
-        assert any(fi.secret_type == "AWS Access Key" for fi in findings)
+        assert any(fi.secret_type == "Yandex Cloud Service Account Key" for fi in findings)
 
     def test_empty_zip_returns_empty(self, tmp_path):
         zf = self._make_zip(tmp_path, {})
@@ -108,11 +108,11 @@ class TestRunScanUrl:
     def test_url_scan_delegates_to_scan_remote_source(self, tmp_path):
         repo = tmp_path / "repo"
         repo.mkdir()
-        (repo / "app.py").write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        (repo / "app.py").write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
         subprocess.run(["git", "config", "user.email", "t@t.com"], cwd=repo, check=True, capture_output=True)
         subprocess.run(["git", "config", "user.name", "t"], cwd=repo, check=True, capture_output=True)
         subprocess.run(["git", "add", "."], cwd=repo, check=True, capture_output=True)
         subprocess.run(["git", "commit", "-m", "init"], cwd=repo, check=True, capture_output=True)
         findings = run_scan(url=str(repo))
-        assert any(fi.secret_type == "AWS Access Key" for fi in findings)
+        assert any(fi.secret_type == "Yandex Cloud Service Account Key" for fi in findings)

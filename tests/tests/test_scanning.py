@@ -25,9 +25,9 @@ from scanner.core.scanning import (
 class TestScanFile:
     def test_finds_secret_in_file(self, tmp_path):
         f = tmp_path / "config.py"
-        f.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        f.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         findings = scan_file(str(f))
-        assert any(fi.secret_type == "AWS Access Key" for fi in findings)
+        assert any(fi.secret_type == "Yandex Cloud Service Account Key" for fi in findings)
 
     def test_returns_empty_for_clean_file(self, tmp_path):
         f = tmp_path / "clean.py"
@@ -36,7 +36,7 @@ class TestScanFile:
 
     def test_skips_jpg_extension(self, tmp_path):
         f = tmp_path / "photo.jpg"
-        f.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        f.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         assert scan_file(str(f)) == []
 
     def test_skips_png_extension(self, tmp_path):
@@ -46,7 +46,7 @@ class TestScanFile:
 
     def test_skips_lock_extension(self, tmp_path):
         f = tmp_path / "yarn.lock"
-        f.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        f.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         assert scan_file(str(f)) == []
 
     def test_returns_empty_on_oserror(self, tmp_path):
@@ -65,14 +65,14 @@ class TestScanFile:
 
     def test_handles_utf8_errors_without_crash(self, tmp_path):
         f = tmp_path / "binary.py"
-        f.write_bytes(b"\xff\xfe AKIAJX7LKQHMBQWRFP2A\n")
+        f.write_bytes(b"\xff\xfe AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n")
         # Should not raise; may or may not find the key depending on decode
         result = scan_file(str(f))
         assert isinstance(result, list)
 
     def test_correct_filepath_in_finding(self, tmp_path):
         f = tmp_path / "keys.py"
-        f.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        f.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         findings = scan_file(str(f))
         assert findings
         assert findings[0].file == str(f)
@@ -84,35 +84,35 @@ class TestScanDirectory:
     def test_finds_secrets_recursively(self, tmp_path):
         sub = tmp_path / "sub"
         sub.mkdir()
-        (sub / "config.py").write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        (sub / "config.py").write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         findings = scan_directory(str(tmp_path))
-        assert any(fi.secret_type == "AWS Access Key" for fi in findings)
+        assert any(fi.secret_type == "Yandex Cloud Service Account Key" for fi in findings)
 
     def test_skips_node_modules(self, tmp_path):
         nm = tmp_path / "node_modules" / "pkg"
         nm.mkdir(parents=True)
-        (nm / "index.js").write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        (nm / "index.js").write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         findings = scan_directory(str(tmp_path))
         assert not any("node_modules" in fi.file for fi in findings)
 
     def test_skips_pycache(self, tmp_path):
         pc = tmp_path / "__pycache__"
         pc.mkdir()
-        (pc / "module.pyc").write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        (pc / "module.pyc").write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         findings = scan_directory(str(tmp_path))
         assert not any("__pycache__" in fi.file for fi in findings)
 
     def test_skips_dot_git_dir(self, tmp_path):
         git_dir = tmp_path / ".git"
         git_dir.mkdir()
-        (git_dir / "config").write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        (git_dir / "config").write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         findings = scan_directory(str(tmp_path))
         assert not any(".git" in fi.file for fi in findings)
 
     def test_skips_venv(self, tmp_path):
         venv = tmp_path / ".venv" / "lib"
         venv.mkdir(parents=True)
-        (venv / "site.py").write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        (venv / "site.py").write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         findings = scan_directory(str(tmp_path))
         assert not any(".venv" in fi.file for fi in findings)
 
@@ -124,12 +124,12 @@ class TestScanDirectory:
         assert scan_directory(str(tmp_path)) == []
 
     def test_multiple_files_with_secrets(self, tmp_path):
-        (tmp_path / "a.py").write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
-        (tmp_path / "b.py").write_text("ghp_mNpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvW\n", encoding="utf-8")
+        (tmp_path / "a.py").write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
+        (tmp_path / "b.py").write_text("vk567890abcdefghijklmnopqrstuvwxyzABCD\n", encoding="utf-8")
         findings = scan_directory(str(tmp_path))
         types = {fi.secret_type for fi in findings}
-        assert "AWS Access Key" in types
-        assert "GitHub Token" in types
+        assert "Yandex Cloud Service Account Key" in types
+        assert "VK API Access Token" in types
 
 
 # ── _run_git ──────────────────────────────────────────────────────────────────
@@ -168,15 +168,15 @@ class TestScanGitHistory:
 
     def test_finds_secret_in_history(self, tmp_path):
         repo = self._make_repo(tmp_path)
-        (repo / "app.py").write_text("TOKEN='ghp_mNpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvW'\n", encoding="utf-8")
+        (repo / "app.py").write_text("TOKEN='vk567890abcdefghijklmnopqrstuvwxyzABCD'\n", encoding="utf-8")
         subprocess.run(["git", "add", "."], cwd=repo, check=True, capture_output=True)
         subprocess.run(["git", "commit", "-m", "add secret"], cwd=repo, check=True, capture_output=True)
         findings = scan_git_history(str(repo), max_commits=10)
-        assert any(fi.secret_type == "GitHub Token" for fi in findings)
+        assert any(fi.secret_type == "VK API Access Token" for fi in findings)
 
     def test_findings_have_source_history(self, tmp_path):
         repo = self._make_repo(tmp_path)
-        (repo / "app.py").write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        (repo / "app.py").write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         subprocess.run(["git", "add", "."], cwd=repo, check=True, capture_output=True)
         subprocess.run(["git", "commit", "-m", "secret"], cwd=repo, check=True, capture_output=True)
         findings = scan_git_history(str(repo))
@@ -196,7 +196,7 @@ class TestScanGitHistory:
 
     def test_skips_image_extensions_in_history(self, tmp_path):
         repo = self._make_repo(tmp_path)
-        (repo / "photo.jpg").write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        (repo / "photo.jpg").write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         subprocess.run(["git", "add", "."], cwd=repo, check=True, capture_output=True)
         subprocess.run(["git", "commit", "-m", "img"], cwd=repo, check=True, capture_output=True)
         findings = scan_git_history(str(repo))
@@ -204,7 +204,7 @@ class TestScanGitHistory:
 
     def test_virtual_path_contains_commit_hash(self, tmp_path):
         repo = self._make_repo(tmp_path)
-        (repo / "cfg.py").write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        (repo / "cfg.py").write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         subprocess.run(["git", "add", "."], cwd=repo, check=True, capture_output=True)
         subprocess.run(["git", "commit", "-m", "secret"], cwd=repo, check=True, capture_output=True)
         findings = scan_git_history(str(repo))

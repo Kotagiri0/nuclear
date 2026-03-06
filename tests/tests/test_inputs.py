@@ -140,7 +140,7 @@ class TestScanRemoteSource:
     def _make_local_git_repo(self, tmp_path: Path) -> Path:
         repo = tmp_path / "repo"
         repo.mkdir()
-        (repo / "app.py").write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        (repo / "app.py").write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
         subprocess.run(["git", "config", "user.email", "t@t.com"], cwd=repo, check=True, capture_output=True)
         subprocess.run(["git", "config", "user.name", "t"], cwd=repo, check=True, capture_output=True)
@@ -156,12 +156,12 @@ class TestScanRemoteSource:
     def test_local_git_finds_secrets(self, tmp_path):
         repo = self._make_local_git_repo(tmp_path)
         findings, _, _ = scan_remote_source(str(repo))
-        assert any(f.secret_type == "AWS Access Key" for f in findings)
+        assert any(f.secret_type == "Yandex Cloud Service Account Key" for f in findings)
 
     def test_zip_url_returns_zip_kind(self, tmp_path):
         zf_path = tmp_path / "pkg.zip"
         with zipfile.ZipFile(zf_path, "w") as zf:
-            zf.writestr("secret.py", "AKIAJX7LKQHMBQWRFP2A\n")
+            zf.writestr("secret.py", "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n")
 
         with patch("scanner.core.inputs._looks_like_git_url", return_value=False), \
              patch("scanner.core.inputs._download_url", return_value=str(zf_path)):
@@ -170,7 +170,7 @@ class TestScanRemoteSource:
 
     def test_file_url_returns_file_kind(self, tmp_path):
         secret_file = tmp_path / "cfg.py"
-        secret_file.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        secret_file.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
 
         with patch("scanner.core.inputs._looks_like_git_url", return_value=False), \
              patch("scanner.core.inputs._download_url", return_value=str(secret_file)):
