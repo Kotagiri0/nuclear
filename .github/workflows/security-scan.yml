@@ -89,6 +89,7 @@ jobs:
       - name: Upload SARIF to GitHub Security tab
         if: always() && hashFiles('artifacts/scan-report.sarif') != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
         uses: github/codeql-action/upload-sarif@v4
+        continue-on-error: true
         with:
           sarif_file: artifacts/scan-report.sarif
 
