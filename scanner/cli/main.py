@@ -28,6 +28,56 @@ def build_parser(cfg=None) -> argparse.ArgumentParser:
     parser.add_argument("-q", "--quiet", action="store_true", help="Тихий режим — только exit code, без вывода")
     parser.add_argument("-v", "--verbose", action="store_true", help="Подробный режим — время сканирования, кол-во файлов")
     parser.add_argument("--recommendations", action="store_true", help="Добавить рекомендации по устранению найденных утечек")
+    parser.add_argument(
+        "--ai-security",
+        action="store_true",
+        help="Опционально: LLM-сканирование безопасности кода (внешний вызов; требует ключ и пакет openai)",
+    )
+    parser.add_argument(
+        "--ai-provider",
+        choices=["nvidia"],
+        default="nvidia",
+        help="AI-провайдер для --ai-security (по умолчанию: nvidia)",
+    )
+    parser.add_argument(
+        "--ai-model",
+        default=None,
+        help="Имя модели (если не указано — выберется любая Qwen, приоритет 122B)",
+    )
+    parser.add_argument(
+        "--ai-base-url",
+        default="https://integrate.api.nvidia.com/v1",
+        help="Base URL для AI-провайдера (по умолчанию: NVIDIA integrate api)",
+    )
+    parser.add_argument(
+        "--ai-timeout",
+        type=int,
+        default=30,
+        help="Таймаут AI-запроса (сек)",
+    )
+    parser.add_argument(
+        "--ai-max-bytes",
+        type=int,
+        default=50_000,
+        help="Не отправлять в AI файлы больше этого размера (байт)",
+    )
+    parser.add_argument(
+        "--ai-max-tokens",
+        type=int,
+        default=500,
+        help="Максимум токенов в ответе AI",
+    )
+    parser.add_argument(
+        "--ai-max-files",
+        type=int,
+        default=50,
+        help="Лимит числа LLM-запросов за запуск (0 = без лимита)",
+    )
+    parser.add_argument(
+        "--ai-scan-all",
+        action="store_true",
+        help="Сканировать LLM-ом все поддерживаемые файлы (медленно). По умолчанию LLM вызывается только для 'подозрительных' файлов.",
+    )
     return parser
 
 
@@ -35,6 +85,13 @@ def main() -> None:
     # Ensure stdout supports Unicode on Windows (handles emoji in reports)
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    # Load local .env (if present) before reading config/env overrides
+    try:
+        from scanner.config import load_dotenv
+
+        load_dotenv()
+    except Exception:
+        pass
     cfg = load_config()
     parser = build_parser(cfg)
     args = parser.parse_args()
@@ -50,6 +107,21 @@ def main() -> None:
 
     start_time = time.monotonic()
 
+    ai_security_cfg = None
+    if getattr(args, "ai_security", False):
+        from scanner.ai.security import AISecurityConfig
+
+        ai_security_cfg = AISecurityConfig(
+            provider=args.ai_provider,
+            base_url=args.ai_base_url,
+            model=args.ai_model,
+            max_tokens=args.ai_max_tokens,
+            timeout_s=args.ai_timeout,
+            max_bytes=args.ai_max_bytes,
+            max_files=args.ai_max_files,
+            scan_all_files=args.ai_scan_all,
+        )
+
     try:
         findings = run_scan(
             target=args.target,
@@ -59,9 +131,14 @@ def main() -> None:
             history_commits=args.history_commits,
             exclude=args.exclude or None,
             include=args.include or None,
+            ai_security_cfg=ai_security_cfg,
             on_file=_on_file,
         )
     except FileNotFoundError as exc:
+        print(f"Ошибка: {exc}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as exc:
+        # AI mode (and some remote scan flows) can raise meaningful runtime errors.
         print(f"Ошибка: {exc}", file=sys.stderr)
         sys.exit(1)
 

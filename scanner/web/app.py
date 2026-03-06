@@ -931,6 +931,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    # Load local .env (if present) so AI/API keys can be provided without exporting.
+    try:
+        from scanner.config import load_dotenv
+
+        load_dotenv()
+    except Exception:
+        pass
     args = build_parser().parse_args()
     server = ThreadingHTTPServer((args.host, args.port), _Handler)
     server.default_target = args.target  # type: ignore[attr-defined]
