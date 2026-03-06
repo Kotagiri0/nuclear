@@ -155,7 +155,7 @@ Workflow-файл: `.github/workflows/security-scan.yml`
 Базовая policy-команда в CI:
 
 ```bash
-nuclear-scan scanner --min-severity LOW --fail-on HIGH --format json
+nuclear-scan scanner --min-severity LOW --fail-on HIGH --exclude scanner/output/recommendations.py --format json
 ```
 
 ## Тестовый корпус (22 проекта)
