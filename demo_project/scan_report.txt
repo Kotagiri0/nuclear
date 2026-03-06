@@ -1,0 +1,324 @@
+<frozen runpy>:128: RuntimeWarning: 'scanner.cli.main' found in sys.modules after import of package 'scanner.cli', but prior to execution of 'scanner.cli.main'; this may result in unpredictable behaviour
+
+[1m🔍 Secret Scanner Report[0m
+Found 19 potential secret(s)
+
+======================================================================
+[1m[91m[CRITICAL][0m Private Key (private_key)
+  📁 File   : demo_project\.env:23
+  🔑 Value  : -----BEGIN RSA PRIVATE KEY-----
+  📊 Score  : 18 | Entropy: 3.38 | Confidence: 0.99
+  🧭 Source : current
+  🏷  Flags  : context✓, structure✓
+  📝 Line   : PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----
+----------------------------------------------------------------------
+[1m[91m[CRITICAL][0m Stripe Secret Key (api_secret)
+  📁 File   : demo_project\.env:15
+  🔑 Value  : sk_live_abcdefghijklmnopqrstuvwx
+  📊 Score  : 17 | Entropy: 4.56 | Confidence: 0.99
+  🧭 Source : current
+  🏷  Flags  : context✓
+  📝 Line   : STRIPE_SECRET_KEY=sk_live_abcdefghijklmnopqrstuvwx
+----------------------------------------------------------------------
+[1m[91m[CRITICAL][0m Stripe Secret Key (api_secret)
+  📁 File   : demo_project\app.py:8
+  🔑 Value  : sk_live_abcdefghijklmnopqrstuvwx
+  📊 Score  : 16 | Entropy: 4.56 | Confidence: 0.99
+  🧭 Source : current
+  🏷  Flags  : context✓, taint:2✓
+  📝 Line   : API_KEY = "sk_live_abcdefghijklmnopqrstuvwx"
+  [2m──────────────────────────────────────────────────[0m
+  [1m🔗 Taint trace:[0m [91mAPI_KEY[0m → [1mLogging[0m
+     📍 Source : demo_project\app.py:8
+     💥 Sink   : demo_project\app.py:25  [Logging]
+        logging.info(f"Processing request for user {user_id} with API key: {API_KEY}")
+  [1m🔗 Taint trace:[0m [91mAPI_KEY[0m → [1mLogging[0m
+     📍 Source : demo_project\app.py:8
+     💥 Sink   : demo_project\app.py:25  [Logging]
+        logging.info(f"Processing request for user {user_id} with API key: {API_KEY}")
+----------------------------------------------------------------------
+[1m[91m[CRITICAL][0m Private Key (private_key)
+  📁 File   : demo_project\app.py:40
+  🔑 Value  : -----BEGIN OPENSSH PRIVATE KEY-----
+  📊 Score  : 16 | Entropy: 3.59 | Confidence: 0.99
+  🧭 Source : current
+  🏷  Flags  : context✓, structure✓
+  📝 Line   : SSH_PRIVATE_KEY = """-----BEGIN OPENSSH PRIVATE KEY-----
+----------------------------------------------------------------------
+[1m[91m[CRITICAL][0m Stripe Secret Key (api_secret)
+  📁 File   : demo_project\k8s-manifest.yaml:18
+  🔑 Value  : sk_live_abcdefghijklmnopqrstuvwx
+  📊 Score  : 16 | Entropy: 4.56 | Confidence: 0.99
+  🧭 Source : current
+  🏷  Flags  : context✓
+  📝 Line   : value: "sk_live_abcdefghijklmnopqrstuvwx"
+----------------------------------------------------------------------
+[1m[91m[CRITICAL][0m JWT Token (jwt)
+  📁 File   : demo_project\app.py:54
+  🔑 Value  : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODk...
+  📊 Score  : 15 | Entropy: 5.44 | Confidence: 0.99
+  🧭 Source : current
+  🏷  Flags  : context✓, structure✓
+  📝 Line   : AUTH_HEADER = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxN
+----------------------------------------------------------------------
+[1m[91m[CRITICAL][0m JWT Token (jwt)
+  📁 File   : demo_project\config.py:19
+  🔑 Value  : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODk...
+  📊 Score  : 15 | Entropy: 5.33 | Confidence: 0.99
+  🧭 Source : current
+  🏷  Flags  : context✓, structure✓
+  📝 Line   : JWT_SECRET = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR
+----------------------------------------------------------------------
+[1m[91m[CRITICAL][0m Stripe Secret Key (api_secret)
+  📁 File   : demo_project\config.js:9
+  🔑 Value  : sk_live_abcdefghijklmnopqrstuvwx
+  📊 Score  : 14 | Entropy: 4.56 | Confidence: 0.99
+  🧭 Source : current
+  🏷  Flags  : context✓
+  📝 Line   : stripeSecret: "sk_live_abcdefghijklmnopqrstuvwx",
+----------------------------------------------------------------------
+[1m[91m[CRITICAL][0m Stripe Secret Key (api_secret)
+  📁 File   : demo_project\config.py:14
+  🔑 Value  : sk_live_abcdefghijklmnopqrstuvwx
+  📊 Score  : 14 | Entropy: 4.56 | Confidence: 0.99
+  🧭 Source : current
+  🏷  Flags  : context✓
+  📝 Line   : STRIPE_SECRET_KEY = "sk_live_abcdefghijklmnopqrstuvwx"
+----------------------------------------------------------------------
+[1m[91m[CRITICAL][0m Connection String (db_credential)
+  📁 File   : demo_project\.env:12
+  🔑 Value  : postgres
+  📊 Score  : 13 | Entropy: 2.75 | Confidence: 0.96
+  🧭 Source : current
+  🏷  Flags  : context✓
+  📝 Line   : DATABASE_URL=postgres://admin:SuperSecretPassword123!@localhost:5432/myapp
+----------------------------------------------------------------------
+[1m[91m[CRITICAL][0m Private Key (private_key)
+  📁 File   : demo_project\config.js:41
+  🔑 Value  : -----BEGIN RSA PRIVATE KEY-----
+  📊 Score  : 13 | Entropy: 3.38 | Confidence: 0.99
+  🧭 Source : current
+  🏷  Flags  : structure✓
+  📝 Line   : const privateKey = `-----BEGIN RSA PRIVATE KEY-----
+----------------------------------------------------------------------
+[1m[91m[CRITICAL][0m Generic API Key (api_key)
+  📁 File   : demo_project\app.py:8
+  🔑 Value  : sk_live_abcdefghijklmnopqrstuvwx
+  📊 Score  : 12 | Entropy: 4.56 | Confidence: 0.99
+  🧭 Source : current
+  🏷  Flags  : context✓, taint:2✓
+  📝 Line   : API_KEY = "sk_live_abcdefghijklmnopqrstuvwx"
+  [2m──────────────────────────────────────────────────[0m
+  [1m🔗 Taint trace:[0m [91mAPI_KEY[0m → [1mLogging[0m
+     📍 Source : demo_project\app.py:8
+     💥 Sink   : demo_project\app.py:25  [Logging]
+        logging.info(f"Processing request for user {user_id} with API key: {API_KEY}")
+  [1m🔗 Taint trace:[0m [91mAPI_KEY[0m → [1mLogging[0m
+     📍 Source : demo_project\app.py:8
+     💥 Sink   : demo_project\app.py:25  [Logging]
+        logging.info(f"Processing request for user {user_id} with API key: {API_KEY}")
+----------------------------------------------------------------------
+[1m[31m[HIGH][0m Bearer Token (bearer_token)
+  📁 File   : demo_project\app.py:54
+  🔑 Value  : Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0...
+  📊 Score  : 11 | Entropy: 5.51 | Confidence: 0.94
+  🧭 Source : current
+  🏷  Flags  : context✓
+  📝 Line   : AUTH_HEADER = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxN
+----------------------------------------------------------------------
+[1m[31m[HIGH][0m Basic Auth (basic_auth)
+  📁 File   : demo_project\config.js:22
+  🔑 Value  : Basic YWRtaW46cGFzc3dvcmQxMjM0NTY
+  📊 Score  : 11 | Entropy: 4.56 | Confidence: 0.94
+  🧭 Source : current
+  🏷  Flags  : context✓
+  📝 Line   : basicAuth: "Basic YWRtaW46cGFzc3dvcmQxMjM0NTY=",
+----------------------------------------------------------------------
+[1m[31m[HIGH][0m Connection String (db_credential)
+  📁 File   : demo_project\app.py:30
+  🔑 Value  : mongodb
+  📊 Score  : 10 | Entropy: 2.52 | Confidence: 0.78
+  🧭 Source : current
+  🏷  Flags  : context✓
+  📝 Line   : conn_string = "mongodb://dbadmin:mongopass123@cluster0.example.com:27017/production"
+----------------------------------------------------------------------
+[1m[31m[HIGH][0m Generic Secret (credential)
+  📁 File   : demo_project\config.js:9
+  🔑 Value  : sk_live_abcdefghijklmnopqrstuvwx
+  📊 Score  : 10 | Entropy: 4.56 | Confidence: 0.88
+  🧭 Source : current
+  🏷  Flags  : context✓
+  📝 Line   : stripeSecret: "sk_live_abcdefghijklmnopqrstuvwx",
+----------------------------------------------------------------------
+[1m[31m[HIGH][0m Generic Secret (credential)
+  📁 File   : demo_project\config.js:19
+  🔑 Value  : GOCSPX-abcdefghijklmnopqrstuvwx
+  📊 Score  : 10 | Entropy: 4.95 | Confidence: 0.88
+  🧭 Source : current
+  🏷  Flags  : context✓
+  📝 Line   : googleClientSecret: "GOCSPX-abcdefghijklmnopqrstuvwx",
+----------------------------------------------------------------------
+[1m[31m[HIGH][0m Generic Secret (credential)
+  📁 File   : demo_project\config.py:19
+  🔑 Value  : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODk...
+  📊 Score  : 10 | Entropy: 5.33 | Confidence: 0.88
+  🧭 Source : current
+  🏷  Flags  : context✓
+  📝 Line   : JWT_SECRET = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR
+----------------------------------------------------------------------
+[1m[31m[HIGH][0m Generic Secret (credential)
+  📁 File   : demo_project\config.py:18
+  🔑 Value  : my-super-secret-app-key-2024
+  📊 Score  : 8 | Entropy: 3.65 | Confidence: 0.65
+  🧭 Source : current
+  🏷  Flags  : context✓
+  📝 Line   : APP_SECRET = "my-super-secret-app-key-2024"
+----------------------------------------------------------------------
+
+[1mSummary:[0m
+  [91mCRITICAL[0m: 12
+  [31mHIGH[0m: 7
+
+  [91m⚠  Secrets actively used in dangerous sinks: 2[0m
+
+
+======================================================================
+📋 РЕКОМЕНДАЦИИ ПО УСТРАНЕНИЮ УТЕЧЕК
+======================================================================
+
+🔴 [HIGH] Connection String
+   Найдено: 2 утечек
+
+   📌 Перенесите строки подключения к БД в переменные окружения
+
+   Connection strings содержат учётные данные к базам данных.
+   • Используйте переменные окружения
+   • Применяйте системы управления секретами
+   • Ограничьте права доступа БД по принципу минимальных привилегий
+
+   Пример кода:
+   # ❌ Неправильно:
+   DATABASE_URL = "postgres://admin:password@localhost:5432/db"
+   
+   # ✅ Правильно:
+   import os
+   DATABASE_URL = os.getenv("DATABASE_URL")
+   
+   # ✅ С использованием Secrets Manager:
+   import boto3
+   client = boto3.client('secretsmanager')
+   secret = client.get_secret_value(SecretId='prod/db/url')
+
+----------------------------------------------------------------------
+
+🔴 [HIGH] Private Key
+   Найдено: 3 утечек
+
+   📌 Немедленно удалите приватный ключ из репозитория
+
+   ⚠️ КРИТИЧЕСКАЯ УЯЗВИМОСТЬ!
+   Приватные ключи дают полный доступ к серверам/сертификатам.
+   • Немедленно отзовите ключ и сгенерируйте новый
+   • Используйте менеджеры секретов (HashiCorp Vault, AWS Secrets Manager)
+   • Настройте pre-commit хуки для предотвращения коммитов
+
+----------------------------------------------------------------------
+
+🔴 [HIGH] Stripe Secret Key
+   Найдено: 5 утечек
+
+   📌 Перенесите Stripe API ключи в переменные окружения
+
+   Stripe Secret Key позволяет проводить платежи от вашего имени.
+   • Используйте переменные окружения
+   • Настройте разные ключи для development/production
+   • Отозовите скомпрометированный ключ в Stripe Dashboard
+
+----------------------------------------------------------------------
+
+🟡 [MEDIUM] Basic Auth
+   Найдено: 1 утечек
+
+   📌 Избегайте Basic Auth в коде
+
+   Basic Auth credentials легко декодируются.
+   • Используйте OAuth 2.0 или JWT
+   • Если необходим Basic Auth — храните credentials в secrets manager
+
+----------------------------------------------------------------------
+
+🟡 [MEDIUM] Bearer Token
+   Найдено: 1 утечек
+
+   📌 Не храните bearer токены в коде
+
+   Bearer токены используются для аутентификации.
+   • Получайте токены динамически через OAuth flow
+   • Храните refresh tokens в безопасном хранилище
+   • Установите короткое время жизни access токенов
+
+----------------------------------------------------------------------
+
+🟡 [MEDIUM] Generic API Key
+   Найдено: 1 утечек
+
+   📌 Перенесите API ключи в переменные окружения
+
+   API ключи предоставляют доступ к внешним сервисам.
+   • Храните в переменных окружения
+   • Регулярно ротируйте ключи
+   • Используйте разные ключи для разных окружений
+
+----------------------------------------------------------------------
+
+🟡 [MEDIUM] Generic Secret
+   Найдено: 4 утечек
+
+   📌 Перенесите секретные значения в безопасное хранилище
+
+   Общие секреты (пароли, API ключи) не должны храниться в коде.
+   • Используйте переменные окружения
+   • Примените .env файлы (добавив их в .gitignore)
+   • Используйте менеджеры секретов
+
+----------------------------------------------------------------------
+
+🟡 [MEDIUM] JWT Token
+   Найдено: 2 утечек
+
+   📌 Не храните JWT токены в коде
+
+   JWT токены могут предоставить доступ к пользовательским данным.
+   • Генерируйте токены динамически
+   • Храните секрет подписи в переменных окружениях
+   • Установите короткое время жизни токенов
+
+----------------------------------------------------------------------
+
+📚 ОБЩИЕ РЕКОМЕНДАЦИИ ПО БЕЗОПАСНОСТИ
+
+1. 🔐 Используйте системы управления секретами:
+   • HashiCorp Vault
+   • AWS Secrets Manager
+   • Azure Key Vault
+   • Google Secret Manager
+
+2. 🛡️ Настройте pre-commit хуки:
+   • git-secrets
+   • detect-secrets
+   • pre-commit с hook для сканирования секретов
+
+3. 🔄 Регулярно ротируйте секреты:
+   • Установите политику ротации (30-90 дней)
+   • Автоматизируйте процесс ротации
+
+4. 📝 Включите сканирование в CI/CD:
+   • Запускайте nuclear-scan в pipeline
+   • Блокируйте merge при находках HIGH/CRITICAL
+
+5. 🗑️ Если секреты уже в Git:
+   • Используйте BFG Repo-Cleaner или git filter-branch
+   • Отозовите все скомпрометированные ключи
+   • Сгенерируйте новые credentials
+
+======================================================================

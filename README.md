@@ -69,11 +69,50 @@ pip install -r requirements.txt
 ## Локальный запуск
 
 ```bash
+# Базовое сканирование
 nuclear-scan .
+
+# Сканирование с рекомендациями по устранению
+nuclear-scan . --recommendations
+
+# Только HIGH и CRITICAL
 nuclear-scan . --min-severity HIGH
+
+# JSON отчёт
 nuclear-scan . --format json
+
+# SARIF отчёт (для GitHub Security)
 nuclear-scan . --format sarif > scanner.sarif
+
+# HTML отчёт
+nuclear-scan . --format html
+
+# Сканирование истории Git
 nuclear-scan . --scan-history --history-commits 100
+
+# Тихий режим (только exit code)
+nuclear-scan . --quiet
+
+# Подробный режим
+nuclear-scan . --verbose
+```
+
+## Веб-сервер (локально)
+
+```bash
+nuclear-web --host 127.0.0.1 --port 8765 --target .
+```
+
+Откройте в браузере:
+
+```text
+http://127.0.0.1:8765
+```
+
+API для запуска сканирования:
+
+```text
+POST /api/scan
 ```
 
 ## Сканирование по URL

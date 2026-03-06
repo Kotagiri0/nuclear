@@ -72,6 +72,15 @@ def generate_html_report(findings: list, target: str = "") -> str:
             </td>
         </tr>"""
 
+    # Build container content
+    if not findings:
+        container_content = '<div class="empty"><div class="icon">✅</div><div>No secrets found</div></div>'
+    else:
+        container_content = f"""<table>
+<thead><tr><th>#</th><th>Severity</th><th>Type</th><th>File</th><th>Score</th><th>Conf</th><th>Value</th></tr></thead>
+<tbody>{rows_html}</tbody>
+</table>"""
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -137,11 +146,7 @@ td {{ padding:10px 12px; border-bottom:1px solid #f1f5f9; font-size:14px; }}
     <button class="filter-btn" onclick="filterBy('LOW')">Low</button>
 </div>
 <div class="container">
-{'<div class="empty"><div class="icon">✅</div><div>No secrets found</div></div>' if not findings else f"""
-<table>
-<thead><tr><th>#</th><th>Severity</th><th>Type</th><th>File</th><th>Score</th><th>Conf</th><th>Value</th></tr></thead>
-<tbody>{rows_html}</tbody>
-</table>"""}
+{container_content}
 </div>
 <script>
 document.querySelectorAll('.finding-row').forEach(row => {{

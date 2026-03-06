@@ -27,6 +27,7 @@ def build_parser(cfg=None) -> argparse.ArgumentParser:
     parser.add_argument("--include", action="append", default=[], metavar="GLOB", help="Сканировать только файлы по glob-паттерну (можно указать несколько раз)")
     parser.add_argument("-q", "--quiet", action="store_true", help="Тихий режим — только exit code, без вывода")
     parser.add_argument("-v", "--verbose", action="store_true", help="Подробный режим — время сканирования, кол-во файлов")
+    parser.add_argument("--recommendations", action="store_true", help="Добавить рекомендации по устранению найденных утечек")
     return parser
 
 
@@ -80,6 +81,18 @@ def main() -> None:
                 out_path.write_text(report, encoding="utf-8")
             else:
                 print(report)
+            
+            # Add recommendations if requested
+            if args.recommendations and findings:
+                from scanner.output.recommendations import generate_recommendations_report
+                print("\n")
+                rec_report = generate_recommendations_report(findings)
+                if args.output:
+                    rec_path = out_path.parent / "recommendations.txt"
+                    rec_path.write_text(rec_report, encoding="utf-8")
+                    print(f"\n📄 Recommendations saved: {rec_path}")
+                else:
+                    print(rec_report)
 
         if args.verbose:
             print(f"\n⏱  Время: {elapsed:.2f}с | 📁 Файлов: {file_count} | 🔍 Секретов: {len(findings)}", file=sys.stderr)

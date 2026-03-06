@@ -18,6 +18,7 @@ dependencies = [
 [project.scripts]
 nuclear-scan = "scanner.cli.main:main"
 nuclear = "scanner.repl:run"
+nuclear-web = "scanner.web.app:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
