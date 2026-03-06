@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
   security-events: write
 
@@ -32,8 +33,29 @@ jobs:
           pip install -r requirements.txt
           pip install -e .
 
-      - name: Run unit and integration tests
-        run: pytest -q
+      - name: Run strict test gate (warnings + coverage)
+        run: |
+          pytest -q --strict-markers --strict-config -W error --maxfail=1 \
+            --cov=scanner.core \
+            --cov=scanner.output.policy \
+            --cov=scanner.output.reporting \
+            --cov-report=term-missing \
+            --cov-fail-under=90
+
+      - name: Run scanner e2e regression checks (vuln vs clean)
+        shell: bash
+        run: |
+          set -e
+          set +e
+          nuclear-scan tests/resources/dir/corpus/projects/py_vuln_small --fail-on LOW --quiet
+          vuln_exit=$?
+          set -e
+          if [ "$vuln_exit" -eq 0 ]; then
+            echo "Expected vulnerable fixture to fail the gate, but got exit code 0"
+            exit 1
+          fi
+
+          nuclear-scan tests/resources/dir/corpus/projects/py_clean_small --fail-on LOW --quiet
 
       - name: Run scanner policy gate and generate reports
         id: scan
@@ -65,8 +87,8 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload SARIF to GitHub Security tab
-        if: always() && hashFiles('artifacts/scan-report.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+        if: always() && hashFiles('artifacts/scan-report.sarif') != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: artifacts/scan-report.sarif
 
