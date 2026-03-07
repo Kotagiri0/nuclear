@@ -91,16 +91,16 @@ class TestPatternMatches:
         assert _matches("Postman API Key", "PMAK-1234567890abcdef-1234567890ABCDEF")
 
     def test_private_key_rsa(self):
-        assert _matches("Private Key", "-----BEGIN RSA PRIVATE KEY-----")
+        assert _matches("RSA Private Key", "-----BEGIN RSA PRIVATE KEY-----")
 
     def test_private_key_ec(self):
-        assert _matches("Private Key", "-----BEGIN EC PRIVATE KEY-----")
+        assert _matches("EC Private Key", "-----BEGIN EC PRIVATE KEY-----")
 
     def test_private_key_openssh(self):
-        assert _matches("Private Key", "-----BEGIN OPENSSH PRIVATE KEY-----")
+        assert _matches("OpenSSH Private Key", "-----BEGIN OPENSSH PRIVATE KEY-----")
 
     def test_private_key_bare(self):
-        assert _matches("Private Key", "-----BEGIN PRIVATE KEY-----")
+        assert _matches("Generic Private Key Block", "-----BEGIN PRIVATE KEY-----")
 
     def test_jwt_token(self):
         jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"
@@ -122,16 +122,16 @@ class TestPatternMatches:
         assert _matches("Mailgun API Key", "key-abcdef1234567890abcdef1234567890")
 
     def test_connection_string_postgres(self):
-        assert _matches("Connection String", "postgres://admin:secret@db.example.com:5432/mydb")
+        assert _matches("PostgreSQL Connection String", "postgres://admin:secret@db.example.com:5432/mydb")
 
     def test_connection_string_mysql(self):
-        assert _matches("Connection String", "mysql://user:pass@localhost/dbname")
+        assert _matches("MySQL Connection String", "mysql://user:pass@localhost/dbname")
 
     def test_connection_string_mongodb(self):
-        assert _matches("Connection String", "mongodb://user:pass@cluster.example.com/db")
+        assert _matches("MongoDB Connection String", "mongodb://user:pass@cluster.example.com/db")
 
     def test_connection_string_redis(self):
-        assert _matches("Connection String", "redis://user:pass@redis.example.com:6379/0")
+        assert _matches("Redis Connection String", "redis://user:pass@redis.example.com:6379/0")
 
     def test_generic_api_key(self):
         assert _matches("Generic API Key", "api_key = 'abcdefghijklmnopqrstuvwxyz123456'")
@@ -159,7 +159,7 @@ class TestPatternNoFalsePositives:
         assert not _matches("JWT Token", "just a normal sentence without tokens")
 
     def test_connection_string_no_match_plain_url(self):
-        assert not _matches("Connection String", "https://example.com/path")
+        assert not _matches("PostgreSQL Connection String", "https://example.com/path")
 
     def test_openai_key_no_match_plain_text(self):
         assert not _matches("OpenAI API Key", "this is a simple text without secrets")
