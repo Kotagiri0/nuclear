@@ -101,7 +101,7 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
             "• Ограничьте права доступа БД по принципу минимальных привилегий"
         ),
         code_example="""# ❌ Неправильно:
-DATABASE_URL = "postgres://admin:password@localhost:5432/db"
+DATABASE_URL = "postgres://admin:fake_password@localhost:5432/db"
 
 # ✅ Правильно:
 import os
@@ -158,6 +158,34 @@ secret = client.get_secret_value(SecretId='prod/db/url')""",
             "Токен бота позволяет управлять ботом от вашего имени.\n"
             "• Храните токен в переменных окружения\n"
             "• Отозовите и перегенерируйте токен через @BotFather"
+        ),
+        priority="medium",
+    ),
+    "Yandex Cloud OAuth": Recommendation(
+        title="Отозовите Yandex OAuth токен",
+        description=(
+            "OAuth токен Яндекса дает доступ к инфраструктуре Yandex Cloud.\n"
+            "• Немедленно удалите и отзовите токен в Yandex Passport\n"
+            "• Для сервисов используйте сервисные аккаунты (Service Accounts)\n"
+            "• Храните ключи в Yandex Lockbox"
+        ),
+        priority="high",
+    ),
+    "Yandex IAM Token": Recommendation(
+        title="Удалите IAM токен Yandex Cloud",
+        description=(
+            "IAM токены имеют короткое время жизни (до 12 часов), но компрометация опасна.\n"
+            "• Не хардкодьте IAM токены\n"
+            "• Используйте SDK/CLI для автоматической генерации IAM токенов из авторизованных ключей"
+        ),
+        priority="high",
+    ),
+    "VK API Token": Recommendation(
+        title="Отозовите токен доступа ВКонтакте",
+        description=(
+            "Утечка VK API Token может привести к рассылке спама или сливу данных из сообществ.\n"
+            "• Сбросьте ключи доступа в настройках API вашего приложения/сообщества VK\n"
+            "• Используйте переменные окружения для хранения ключей"
         ),
         priority="medium",
     ),

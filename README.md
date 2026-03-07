@@ -1,218 +1,65 @@
-# Nuclear Secret Scanner
+# ☢️ Nuclear Secret Scanner
 
-Продвинутый статический сканер для поиска утечек секретов и критичных чувствительных фрагментов кода.
+Продвинутый инструмент статического анализа для поиска утечек секретов в коде (Shift Left Security). 
+Находит API-ключи, пароли, токены и другие чувствительные данные до того, как они попадут в репозиторий.
 
-## Что реализовано
+## Особенности проекта
+- **Минимум ложных срабатываний**: используется проверка контекста (ищет слова `secret`, `password`) и фильтрация мок-данных (`example`, `test`).
+- **Специфика РФ**: поддерживает поиск ключей локальных сервисов (Яндекс Облако, VK, Сбер, Tinkoff, Cloud.ru).
+- **Продвинутый анализ**: ищет не только по регуляркам, но и применяет Taint-анализ (распространение секрета по коду: от переменной до отправки в логи или HTTP-запросы).
+- **Разные форматы целей**: умеет локально "вскрывать" `.zip` архивы и читать историю `git`-коммитов.
+- **Инструменты лечения (Remediation)**: не просто находит уязвимость, но и генерирует рекомендацию по ее аппаратному устранению.
+- **Локальный Web-Интерфейс**: сервер и аналитика запускаются локально, код никуда не отправляется.
 
-- Обнаружение API-ключей, токенов, учетных данных БД, приватных ключей и общих секретов.
-- Ранжирование находок по score, severity (`LOW`/`MEDIUM`/`HIGH`/`CRITICAL`) и confidence.
-- Точная привязка к месту в формате `файл:строка` с типом уязвимости.
-- Трассировка опасного использования секретов через taint-цепочки (источник → распространение → опасный sink).
-- Поддерживаемые режимы сканирования:
-  - локальный файл,
-  - локальная директория,
-  - локальный zip-архив,
-  - удаленный URL (`git`, прямой `zip/http`),
-  - история Git (`--scan-history`).
-- Поддержка CI-политики (`--fail-on HIGH`) для блокировки merge в `prod/master`.
-- Форматы отчетов: `text`, `json`, `sarif`.
+## Быстрый старт (Web UI)
+Самый простой способ запустить сканер — через Docker:
+```bash
+docker-compose up -d
+```
+После запуска откройте в браузере: `http://127.0.0.1:8765`
 
-## Архитектура проекта
+## Интеграция в процесс разработки (CI/CD)
+Главная цель сканера — не пустить плохой код на сервер.
 
-```text
-scanner/
-  __init__.py
-  cli.py                      # контракт CLI
-  analysis.py                 # детекция, скоринг, taint, модели
-  scanning.py                 # сканеры file/dir/zip/history
-  inputs.py                   # загрузка из URL/Git
-  policy.py                   # фильтрация severity и fail-gate
-  reporting.py                # репортеры text/json/sarif
-  patterns.py                 # сигнатуры, sink-правила, пропуски
-  config.py                   # пользовательский конфиг ~/.nuclear/config.toml
-  runner.py                   # единая точка запуска scan (cli + repl)
-  repl.py                     # интерактивный REPL
-tests/
-  resources/                  # тестовые данные
-    dir/
-      corpus/
-        manifest.json
-        projects/             # 22 тестовых проекта (vulnerable + clean)
-    zips/
-      demo_vulnerable_project.zip
-    fixtures/
-    tools/
-      generate_corpus.py
-  tests/                      # тест-файлы
-    test_scanner.py
-    test_extended.py
-    test_corpus.py
-    test_url_and_history.py
-    test_analysis_branches.py
-    test_cli_integration.py
-    test_config.py
-    test_inputs.py
-    test_patterns_direct.py
-    test_reporting_full.py
-    test_runner.py
-    test_scanning.py
-.github/workflows/
-  security-scan.yml
+**1. На компьютере разработчика (Pre-commit)**
+Блокирует `git commit`, если в измененных файлах найден пароль.
+Добавьте в ваш `.pre-commit-config.yaml`:
+```yaml
+repos:
+  - repo: local
+    hooks:
+      - id: nuclear-scanner
+        name: Nuclear Secret Scanner
+        entry: nuclear-scan
+        language: system
 ```
 
-## Установка
+**2. На сервере GitHub (Actions)**
+Блокирует Pull Request. Готовый рабочий пайплайн лежит в файле `.github/workflows/security-scan.yml`.
+
+## Запуск из командной строки (CLI)
+Для инженеров информационной безопасности доступен мощный CLI-инструмент `nuclear-scan`:
 
 ```bash
-pip install -r requirements.txt
-```
-
-## Опционально: AI-сканирование безопасности кода (NVIDIA Qwen)
-
-По умолчанию сканер работает полностью локально. Если вы хотите включить дополнительную проверку кода через LLM:
-
-```bash
-pip install -e ".[ai]"
-# Можно либо экспортнуть ключ, либо положить его в .env (см. .env.example)
-export NUCLEAR_NVIDIA_API_KEY="...ваш ключ..."
-nuclear-scan . --ai-security
-```
-
-Можно явно указать модель/эндпоинт:
-
-```bash
-nuclear-scan . --ai-security --ai-model "qwen2.5-coder-32b-instruct" --ai-base-url "https://integrate.api.nvidia.com/v1"
-```
-
-## Локальный запуск
-
-```bash
-# Базовое сканирование (только российские сервисы)
+# Базовое сканирование текущей папки
 nuclear-scan .
 
-# Сканирование с рекомендациями по устранению
+# Сканирование с выводом советов по устранению
 nuclear-scan . --recommendations
 
-# Только HIGH и CRITICAL
-nuclear-scan . --min-severity HIGH
-
-# JSON отчёт
-nuclear-scan . --format json
-
-# SARIF отчёт (для GitHub Security)
-nuclear-scan . --format sarif > scanner.sarif
-
-# HTML отчёт
-nuclear-scan . --format html
-
-# Сканирование истории Git
+# Сканировать не только текущие файлы, но и последние 100 git-коммитов
 nuclear-scan . --scan-history --history-commits 100
 
-# Тихий режим (только exit code)
-nuclear-scan . --quiet
+# Выдать отчет в формате JSON
+nuclear-scan . --format json
 
-# Подробный режим
-nuclear-scan . --verbose
+# Выдать отчет в формате SARIF (для GitHub Security Alerts)
+nuclear-scan . --format sarif > report.sarif
 ```
 
-## Веб-сервер (локально)
-
+## Тестирование проекта
+Код покрыт 471 юнит-тестом для гарантии стабильности алгоритмов поиска:
 ```bash
-nuclear-web --host 127.0.0.1 --port 8765 --target .
+pip install pytest
+pytest -v
 ```
-
-Откройте в браузере:
-
-```text
-http://127.0.0.1:8765
-```
-
-API для запуска сканирования:
-
-```text
-POST /api/scan
-```
-
-## Сканирование по URL
-
-```bash
-# Git-ссылка
-nuclear-scan --url https://github.com/org/repo.git
-
-# HTTP-ссылка на ZIP
-nuclear-scan --url https://example.com/project.zip
-
-# URL + история Git
-nuclear-scan --url https://github.com/org/repo.git --scan-history --history-commits 100
-```
-
-## Режим пакета
-
-Установка в editable-режиме и запуск через консольную команду:
-
-```bash
-pip install -e .
-nuclear-scan . --fail-on HIGH
-```
-
-Сборка wheel/sdist:
-
-```bash
-python -m build
-```
-
-## CI и защита веток
-
-Workflow-файл: `.github/workflows/security-scan.yml`
-
-- Запускает unit/integration тесты.
-- Запускает scanner gate по исходникам проекта.
-- Падает, если найдены уязвимости уровня `HIGH` или `CRITICAL`.
-- Формирует SARIF-артефакт.
-
-Базовая policy-команда в CI:
-
-```bash
-nuclear-scan scanner --min-severity LOW --fail-on HIGH --exclude scanner/output/recommendations.py --format json
-```
-
-## Тестовый корпус (22 проекта)
-
-В `tests/resources/dir/corpus/projects` находятся уязвимые и чистые проекты разных размеров, языков и уровней вложенности.
-
-Покрываемые языки:
-
-- Python
-- JavaScript
-- TypeScript
-- Java
-- Go
-- PHP
-- C#
-- Ruby
-- Rust
-- смешанная многопапочная структура
-
-Перегенерация корпуса:
-
-```bash
-python tools/generate_corpus.py
-```
-
-## Тесты
-
-```bash
-pytest -q
-```
-
-Включают:
-
-- исходные unit-тесты сканера,
-- тесты качества корпуса,
-- тесты URL-сканирования и сканирования истории Git.
-
-## Коды выхода
-
-- `0` — нет находок на уровне `--fail-on` и выше.
-- `1` — есть хотя бы одна находка на уровне `--fail-on` и выше.
-
-Это позволяет включить жесткий CI/CD gate на защищенных ветках.

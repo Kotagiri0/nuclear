@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  nuclear-scanner:
+    build: .
+    container_name: nuclear-scanner-app
+    ports:
+      - "8765:8765"
+    volumes:
+      - .:/app  # Монтируем текущую директорию для горячей замены кода и сканирования
+    environment:
+      # Загружаем переменные окружения, например NVIDIA API KEY для LLM
+      - NUCLEAR_NVIDIA_API_KEY=${NUCLEAR_NVIDIA_API_KEY:-}
+    restart: unless-stopped

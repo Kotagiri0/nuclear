@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Презентация - Nuclear Secret Scanner (Шаблон КРОК)</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reset.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css" />
+
+    <style>
+      /* Кастомная тема по мотивам PDF-шаблона КРОК */
+      :root {
+        --c-black: #1a1a1a;
+        --c-dark: #222222;
+        --c-light: #e6e6e6;
+        --c-white: #ffffff;
+        --c-accent: #ff6b00; /* Оранжевый акцент */
+      }
+      
+      body {
+        background-color: var(--c-light);
+        color: var(--c-black);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      
+      .reveal {
+        font-size: 32px;
+      }
+      
+      h1, h2, h3, h4, h5, h6 {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        text-transform: none !important;
+        font-weight: 600 !important;
+        color: inherit !important;
+      }
+      
+      .reveal section img {
+        background: none;
+        border: none;
+        box-shadow: none;
+      }
+
+      /* Фоны слайдов */
+      .bg-dark { background-color: var(--c-black); color: var(--c-white); }
+      .bg-light { background-color: var(--c-light); color: var(--c-black); }
+      
+      /* Карточки */
+      .card-dark {
+        background-color: var(--c-black);
+        color: var(--c-white);
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 20px;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      }
+      
+      /* Слайд 1 */
+      .title-container {
+        text-align: left;
+        padding: 50px;
+      }
+      .title-container hr {
+        border-color: var(--c-white);
+        margin: 40px 0;
+      }
+      
+      /* Split layouts */
+      .split-half {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+        margin: -35% -35%; /* fix reveal centering */
+      }
+      
+      /* Архитектура */
+      .arch-box {
+        background: var(--c-white);
+        border: 2px solid #ccc;
+        border-radius: 12px;
+        padding: 15px;
+        margin: 10px auto;
+        width: 60%;
+        color: var(--c-black);
+        font-weight: 500;
+        font-size: 28px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      }
+      .arch-arrow { margin: 5px; color: #888; font-size: 24px;}
+      
+      /* Слайды Решений (7-10) */
+      .solution-layout {
+        display: flex;
+        gap: 30px;
+        align-items: stretch;
+      }
+      .sol-main {
+        flex: 2;
+        background: var(--c-black);
+        color: white;
+        padding: 40px;
+        border-radius: 20px;
+        text-align: left;
+      }
+      .sol-code {
+        flex: 1;
+        background: var(--c-black);
+        color: white;
+        padding: 40px;
+        border-radius: 20px;
+        text-align: left;
+      }
+      .sol-main h2 { color: white !important; font-size: 40px;}
+      .sol-main h4 { color: #ccc !important; font-size: 24px; letter-spacing: 2px; text-transform: uppercase !important;}
+      
+      /* Итоги работы (слайд 13) */
+      .results-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-top: 40px;
+      }
+      .result-card {
+        background: var(--c-black);
+        color: white;
+        padding: 30px;
+        border-radius: 20px;
+        text-align: center;
+        font-size: 24px;
+        position: relative;
+      }
+      .result-icon {
+        position: absolute;
+        top: -25px;
+        left: -25px;
+        background: var(--c-accent);
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 30px;
+        border: 4px solid var(--c-light);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+
+        <!-- 1: Титульный -->
+        <section data-background-color="#1a1a1a">
+          <div class="title-container" style="color: white; margin-top: 100px;">
+            <h1 style="font-size: 60px; color: white;">Сканер утечек в коде</h1>
+            <hr>
+            <h2 style="font-size: 100px; color: white; margin-top: 80px;">кейс КРОК</h2>
+            <p style="font-size: 30px; color: #ccc;">It nuclear hack</p>
+            <div style="background: white; color: black; display: inline-block; padding: 20px 40px; font-size: 50px; font-weight: bold; margin-top: 20px;">
+              [Название вашей команды]
+            </div>
+          </div>
+        </section>
+
+        <!-- 2: Угроза -->
+        <section data-background-color="#e6e6e6">
+          <h2 style="text-align: left; font-weight: 800; font-size: 45px; margin-bottom: 40px;">СЕКРЕТЫ В КОДЕ - ЭТО УГРОЗА НОМЕР 1</h2>
+          
+          <div class="card-dark fragment">
+            <div>📌</div>
+            <div>Случайно закоммиченные API-ключи, токены и пароли приводят к утечкам данных и гигантским финансовым потерям.</div>
+          </div>
+          
+          <div class="card-dark fragment">
+            <div>📌</div>
+            <div>Стандартный поиск (grep и strings) неэффективен: генерирует много шума (False Positives) и совсем не понимает контекста.</div>
+          </div>
+          
+          <div class="card-dark fragment">
+            <div>📌</div>
+            <div>Секреты скрытно "живут" не только в текущем коде, но и в глубине истории Git (даже после их недавнего удаления).</div>
+          </div>
+        </section>
+
+        <!-- 3: Решение Process -->
+        <section data-background-color="#e6e6e6">
+          <div style="display: flex; height: 100%; align-items: center;">
+            <div style="flex: 1; background: #1a1a1a; padding: 50px; height: 100vh; display: flex; align-items: center;">
+              <h1 style="color: white; font-weight: bold;">Решение -<br>Secret Scanner</h1>
+            </div>
+            <div style="flex: 1; padding: 50px; text-align: center;">
+              <p style="text-align: left; font-weight: bold; font-size: 26px; margin-bottom: 40px;">
+                - Инструмент помогает находить, классифицировать и блокировать утечки секретов на всех этапах.
+              </p>
+              
+              <div style="background:#ddd; padding: 15px; border-radius: 8px; font-weight:bold;">Код</div>
+              <div><b>˅</b></div>
+              <div style="background:#ddd; padding: 15px; border-radius: 8px; font-weight:bold;">Сканер</div>
+              <div><b>˅</b></div>
+              <div style="background:#ddd; padding: 15px; border-radius: 8px; font-weight:bold;">Находки</div>
+              <div><b>˅</b></div>
+              <div style="background:#ddd; padding: 15px; border-radius: 8px; font-weight:bold;">Отчет</div>
+              <div><b>˅</b></div>
+              <div style="background:#ddd; padding: 15px; border-radius: 8px; font-weight:bold;">Блокировка CI</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4: Зачем нужен (фичи часть 1) -->
+        <section data-background-color="#e6e6e6">
+          <h2 style="text-align: left; font-weight: bold; margin-bottom: 50px;">Зачем нужен Secret scanner?</h2>
+          
+          <div style="display: flex; flex-direction: column; gap: 30px; align-items: flex-start;">
+            <div class="card-dark" style="width: 70%;">
+              <span>✔️</span> Умеет находить ключи, токены, учетные записи БД и приватные ключи
+            </div>
+            <div class="card-dark" style="width: 70%; align-self: center;">
+              <span>✔️</span> Taint-анализ: Отслеживание путей распространения секретов (Data Flow)
+            </div>
+            <div class="card-dark" style="width: 70%; align-self: flex-end;">
+              <span>✔️</span> Приоритезация угроз - ранжирование (LOW, MEDIUM, HIGH, CRITICAL)
+            </div>
+          </div>
+        </section>
+
+        <!-- 5: Зачем нужен (фичи часть 2) -->
+        <section data-background-color="#e6e6e6">
+          <h2 style="text-align: left; font-weight: bold; margin-bottom: 50px;">Зачем нужен Secret scanner?</h2>
+          
+          <div style="display: flex; flex-direction: column; gap: 30px; align-items: flex-start;">
+            <div class="card-dark" style="width: 70%;">
+              <span>✔️</span> Поддержка множества источников данных (файлы, папки, zip, удаленные Git, история коммитов)
+            </div>
+            <div class="card-dark" style="width: 70%; align-self: center;">
+              <span>✔️</span> Интеграция CI/CD: блокировка слияния опасного кода (Pull Requests)
+            </div>
+            <div class="card-dark" style="width: 70%; align-self: flex-end;">
+              <span>✔️</span> Форматы отчетов: txt, JSON, HTML, SARIF
+            </div>
+          </div>
+        </section>
+
+        <!-- 6: Архитектура (5 слоев) -->
+        <section data-background-color="#e6e6e6">
+          <h2 style="font-weight: bold; margin-bottom: 40px;">Архитектура работы сканера</h2>
+          
+          <div class="arch-box">Сигнатурный поиск</div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-box">Математический анализ</div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-box">Эвристика</div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-box">Базовый Taint-анализ</div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-box">Анализ с помощью LLM</div>
+        </section>
+
+        <!-- 7: Решение 1 -->
+        <section data-background-color="#e6e6e6">
+          <div class="solution-layout">
+            <div class="sol-main" style="position: relative;">
+               <div style="position:absolute; top:-20px; left:20px; background:white; color:black; border-radius:50%; width:50px; height:50px; display:flex; align-items:center; justify-content:center;font-size:30px;">🔑</div>
+               <h2>РЕШЕНИЕ</h2>
+               <h4>СИГНАТУРНЫЙ АНАЛИЗ</h4>
+               <p style="font-size:22px; line-height: 1.4; color: #ddd;">Первый слой - поиск по точным словарям и регулярным выражениям. В отличие от западных аналогов, которые ищут только ключи AWS или GitHub, Secret scanner "из коробки" распознает <b>локальные паттерны (Yandex, VK, Sber, Cloud.ru)</b>. Используются оптимизированные регулярные выражения с проверкой границ слов. Это позволяет сканировать огромные монорепозитории за миллисекунды.</p>
+            </div>
+            <div class="sol-code" style="position: relative;">
+              <div style="position:absolute; top:-20px; left:20px; background:white; color:black; border-radius:50%; width:50px; height:50px; display:flex; align-items:center; justify-content:center;font-size:30px;">🔑</div>
+              <h3 style="font-size: 26px; border-bottom: 1px solid #555; padding-bottom:10px; color:white;">Пример использования в коде</h3>
+              <p style="font-size: 22px; margin-top: 20px;">Строка <code>"y0_AgAAAAA"</code> - это OAuth-токен платформы Yandex Cloud.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 8: Решение 2 -->
+        <section data-background-color="#e6e6e6">
+          <div class="solution-layout">
+            <div class="sol-main" style="position: relative;">
+               <div style="position:absolute; top:-20px; left:20px; background:white; color:black; border-radius:50%; width:50px; height:50px; display:flex; align-items:center; justify-content:center;font-size:30px;">🔑</div>
+               <h2>РЕШЕНИЕ</h2>
+               <h4>МАТЕМАТИЧЕСКИЙ АНАЛИЗ (ЭНТРОПИЯ ШЕННОНА)</h4>
+               <p style="font-size:22px; line-height: 1.4; color: #ddd;">Чтобы находить ключи, о форматах которых мы не знаем заранее (например, самописные токены или пароли от баз данных), мы применяем математический анализ на базе энтропии. Движок разбивает код на фрагменты и вычисляет показатель "хаотичности" набора символов в строке.</p>
+            </div>
+            <div class="sol-code" style="position: relative;">
+              <div style="position:absolute; top:-20px; left:20px; background:white; color:black; border-radius:50%; width:50px; height:50px; display:flex; align-items:center; justify-content:center;font-size:30px;">🔑</div>
+              <h3 style="font-size: 26px; border-bottom: 1px solid #555; padding-bottom:10px; color:white;">Пример использования в коде</h3>
+              <p style="font-size: 22px; margin-top: 20px;"><code>"password123"</code> → низкая энтропия<br><br><code>"qW9#mT8$pLz!"</code> (>4,5 бит) → задетекчен как секрет</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 9: Решение 3 -->
+        <section data-background-color="#e6e6e6">
+          <div class="solution-layout">
+            <div class="sol-main" style="position: relative;">
+               <div style="position:absolute; top:-20px; left:20px; background:white; color:black; border-radius:50%; width:50px; height:50px; display:flex; align-items:center; justify-content:center;font-size:30px;">🔑</div>
+               <h2>РЕШЕНИЕ</h2>
+               <h4>ЭВРИСТИКА И АНАЛИЗ КОНТЕНТА</h4>
+               <p style="font-size:22px; line-height: 1.4; color: #ddd;">Высокая энтропия не всегда означает секрет - это может быть безобидный хэш или ID сессии. Чтобы избавить разработчиков от ложных срабатываний (False Positives), наш третий слой анализирует контекст вокруг подозрительной строки. Сканер проверяет названия переменных и ключей объектов на наличие слов-маркеров: <i>secret, auth, credential</i>.</p>
+            </div>
+            <div class="sol-code" style="position: relative;">
+              <div style="position:absolute; top:-20px; left:20px; background:white; color:black; border-radius:50%; width:50px; height:50px; display:flex; align-items:center; justify-content:center;font-size:30px;">🔑</div>
+              <h3 style="font-size: 26px; border-bottom: 1px solid #555; padding-bottom:10px; color:white;">Пример в коде</h3>
+              <p style="font-size: 22px; margin-top: 20px;"><code>test_hash="..."</code> → LOW (игнорируем)<br><br><code>DATABASE_URL="..."</code> → CRITICAL (секрет БД)</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 10: Решение 4 -->
+        <section data-background-color="#e6e6e6">
+          <div class="solution-layout">
+            <div class="sol-main" style="position: relative;">
+               <div style="position:absolute; top:-20px; left:20px; background:white; color:black; border-radius:50%; width:50px; height:50px; display:flex; align-items:center; justify-content:center;font-size:30px;">🔑</div>
+               <h2>РЕШЕНИЕ</h2>
+               <h4>TAINT-АНАЛИЗ DATA FLOW</h4>
+               <p style="font-size:22px; line-height: 1.4; color: #ddd;">Четвертый слой - это базовая трассировка данных. Знать, что разработчик захардкорил секрет - хорошо. Знать, что этот секрет прямо сейчас куда-то утекает - бесценно. Nuclear отслеживает перемещение найденного токена по AST-дереву или переменным файла в опасные функции (сеть, логи).</p>
+            </div>
+            <div class="sol-code" style="position: relative;">
+              <div style="position:absolute; top:-20px; left:20px; background:white; color:black; border-radius:50%; width:50px; height:50px; display:flex; align-items:center; justify-content:center;font-size:30px;">🔑</div>
+              <h3 style="font-size: 26px; border-bottom: 1px solid #555; padding-bottom:10px; color:white;">Пример в коде</h3>
+              <div style="font-size: 20px; margin-top: 20px; font-family: monospace; color: #aaa;">
+                #5 строка - объявление<br>
+                <span style="color:#4ade80">API_KEY = "123"</span><br><br>
+                #50 строка - использование<br>
+                <span style="color:#ff6b6b">logging.info(f"Using {API_KEY}")</span><br>
+                <b>=> Утечка данных в логи</b>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 11: Где пригодится -->
+        <section data-background-color="#e6e6e6">
+           <div style="display: flex; height: 100vh; align-items: center; text-align: left;">
+            <div style="flex: 1; background: #1a1a1a; padding: 50px; height: 100%; display: flex; align-items: center;">
+              <h1 style="color: white; font-weight: bold; font-size: 60px;">Где это<br>пригодится?</h1>
+            </div>
+            <div style="flex: 1.5; padding: 50px; font-size: 28px;">
+              <h3 style="color: black; font-weight: bold;">📎 Pre-commit hook:</h3>
+              <ul style="margin-bottom:30px;"><li>Запретить коммит с секретом локально</li></ul>
+              
+              <h3 style="color: black; font-weight: bold;">CI Pipeline</h3>
+              <ul style="margin-bottom:30px;"><li>Автоматически проверять каждый PR на утечки</li></ul>
+
+              <h3 style="color: black; font-weight: bold;">Security Audit</h3>
+              <ul style="margin-bottom:30px;"><li>Периодическое сканирование всех репозиториев (Web UI)</li></ul>
+
+              <h3 style="color: black; font-weight: bold;">Forensic Analysis:</h3>
+              <ul style="margin-bottom:30px;"><li>Поиск утечек в истории Git после инцидента</li></ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- 12: Демо -->
+        <section data-background-color="#1a1a1a">
+          <h1 style="color: white; font-weight: bold; font-size: 70px;">ДЕМОНСТРАЦИЯ<br>РАБОТЫ СКАННЕРА</h1>
+          <p style="color: #666; font-size: 24px;">(Переключение на локальный http://127.0.0.1:8765)</p>
+        </section>
+
+        <!-- 13: Итоги -->
+        <section data-background-color="#e6e6e6">
+          <h1 style="color: black; font-weight: bold;">Итоги работы</h1>
+          
+          <div class="results-grid">
+            <div class="result-card">
+              <div class="result-icon">⚡</div>
+              Создан стабильный инструмент для использования в production-пайплайнах
+            </div>
+            <div class="result-card">
+              <div class="result-icon">⚡</div>
+              Инструмент легко встраивается в существующий DevSecOps-процесс
+            </div>
+            <div class="result-card" style="font-size: 20px;">
+              <div class="result-icon">⚡</div>
+              Решена задача проактивного поиска и блокировки утечек, встроен модуль рекомендаций безопасной альтернативы.
+            </div>
+            <div class="result-card" style="font-size: 20px;">
+              <div class="result-icon">⚡</div>
+              Готов к масштабированию и доработке под специфические нужды.
+            </div>
+          </div>
+        </section>
+        
+        <!-- 14: BONUS: ESP32 -->
+        <section data-background-color="#e6e6e6">
+          <h1 style="color: black; font-weight: bold;">Бонусная фича 🎁</h1>
+          <h4>Аппаратный сканер на ESP32</h4>
+          <div class="arch-box" style="font-size: 22px; width: 80%; background: #1a1a1a; color: white; text-align: left; padding: 40px; margin-top: 30px;">
+            <p>Для критической инфраструктуры (КИИ) мы создали <b>Air-Gapped прототип</b>:</p>
+            <ul>
+              <li style="margin-bottom: 10px;">Двухъядерный независимый анализ на чистом C++</li>
+              <li style="margin-bottom: 10px;">ПК выступает "глупым" клиентом (невозможно взломать сканер из ОС)</li>
+              <li style="margin-bottom: 10px;">Zero-Trust: Физическая кнопка подтверждения утечки на плате</li>
+            </ul>
+             <p style="margin-top: 20px; color: #4ade80;">*Готовы продемонстрировать железо по запросу жюри!</p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- Скрипты для работы презентации -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.js"></script>
+    <script>
+      Reveal.initialize({
+        hash: true,
+        transition: 'slide',
+        backgroundTransition: 'fade',
+        controls: true,
+        progress: true,
+        center: true,
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+repos:
+  - repo: local
+    hooks:
+      - id: nuclear-scanner
+        name: Nuclear Secret Scanner (Local Pre-commit)
+        description: "Локальная блокировка коммитов с секретами"
+        entry: nuclear-scan
+        language: system
+        types: [text]
+        args: ["--min-severity", "HIGH"]
+        exclude: ^(\.git/|\.nuclearignore|tests/.*mock.*|demo_project/.*)

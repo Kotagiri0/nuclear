@@ -1,0 +1,8 @@
+- id: nuclear-scanner
+  name: Nuclear Secret Scanner
+  description: "Аппаратно-программный сканер секретов: ищет ключи, API-токены и уязвимости в коде до их попадания в Git."
+  entry: nuclear-scan
+  language: python
+  types: [text]
+  exclude: ^(\.git/|\.nuclearignore|tests/.*mock.*)
+  require_serial: false
