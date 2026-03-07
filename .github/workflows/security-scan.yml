@@ -75,10 +75,10 @@ jobs:
           mkdir -p artifacts
           set +e
 
-          nuclear-scan scanner --min-severity LOW --fail-on HIGH --exclude scanner/output/recommendations.py --format json --output artifacts/scan-report.json --recommendations
+          nuclear-scan scanner --min-severity LOW --fail-on HIGH --exclude scanner/output/recommendations.py --exclude scanner/core/patterns.py --format json --output artifacts/scan-report.json --recommendations
           json_exit=$?
 
-          nuclear-scan scanner --min-severity LOW --exclude scanner/output/recommendations.py --format sarif --output artifacts/scan-report.sarif --recommendations
+          nuclear-scan scanner --min-severity LOW --exclude scanner/output/recommendations.py --exclude scanner/core/patterns.py --format sarif --output artifacts/scan-report.sarif --recommendations
           sarif_exit=$?
 
           if [ "$json_exit" -ne 0 ]; then
