@@ -13,13 +13,14 @@ from pathlib import Path
 import pytest
 
 
-def _run_cli(*args, stdin=None) -> subprocess.CompletedProcess:
+def _run_cli(*args, stdin=None, cwd=None) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, "-m", "scanner.cli", *args],
         capture_output=True,
         text=True,
         encoding="utf-8",
         errors="replace",
+        cwd=cwd,
     )
 
 
@@ -80,6 +81,15 @@ class TestCLIFormats:
         f.write_text("AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n", encoding="utf-8")
         result = _run_cli(str(f), "--format", "text", "--min-severity", "LOW")
         assert any(sev in result.stdout for sev in ("HIGH", "CRITICAL", "MEDIUM", "LOW"))
+
+    def test_pdf_format_writes_pdf_file(self, tmp_path):
+        f = tmp_path / "vuln.py"
+        f.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+        out = tmp_path / "report.pdf"
+        result = _run_cli(str(f), "--format", "pdf", "--output", str(out), cwd=str(tmp_path))
+        assert out.exists()
+        assert out.read_bytes().startswith(b"%PDF")
+        assert "PDF report saved:" in result.stdout
 
 
 # ── severity flags ────────────────────────────────────────────────────────────

@@ -17,7 +17,11 @@ def build_parser(cfg=None) -> argparse.ArgumentParser:
     )
     parser.add_argument("target", nargs="?", help="Файл, директория или .zip архив для сканирования")
     parser.add_argument("--url", help="Удаленный Git/HTTP/ZIP URL для загрузки и сканирования")
-    parser.add_argument("--format", choices=["text", "json", "sarif", "html"], default=cfg.format if cfg.format != "table" else "text")
+    parser.add_argument(
+        "--format",
+        choices=["text", "json", "sarif", "html", "pdf"],
+        default=cfg.format if cfg.format != "table" else "text",
+    )
     parser.add_argument("--min-severity", choices=["LOW", "MEDIUM", "HIGH", "CRITICAL"], default=cfg.severity)
     parser.add_argument("--fail-on", choices=["LOW", "MEDIUM", "HIGH", "CRITICAL"], default=cfg.fail_on)
     parser.add_argument("--scan-history", action="store_true", default=cfg.history, help="Сканировать историю Git-коммитов")
@@ -150,6 +154,16 @@ def main() -> None:
             scan_target = args.target or args.url or "unknown"
             report_path = save_html_report(findings, target=scan_target)
             print(f"📄 HTML report saved: {report_path}")
+        elif args.format == "pdf":
+            from scanner.output.pdf_report import save_pdf_report
+
+            scan_target = args.target or args.url or "unknown"
+            report_path = save_pdf_report(
+                findings,
+                target=scan_target,
+                output_path=args.output if args.output else None,
+            )
+            print(f"📄 PDF report saved: {report_path}")
         else:
             report = generate_report(findings, output_format=args.format)
             if args.output:

@@ -5,10 +5,14 @@ import json
 import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from threading import Lock
 from typing import Any
+from urllib.parse import parse_qs, urlsplit
 
 from scanner.core.runner import run_scan
+from scanner.output.html_report import generate_html_report
 from scanner.output.policy import SEVERITY_ORDER
+from scanner.output.pdf_report import generate_pdf_report
 from scanner.output.recommendations import get_recommendation
 
 MAX_HISTORY_COMMITS = 5000
@@ -389,6 +393,24 @@ def _render_index() -> bytes:
     button:active {
       transform: translateY(0);
     }
+    .button-secondary {
+      background: #ffffff;
+      color: #155e75;
+      border: 1px solid #b7d2ea;
+      box-shadow: none;
+    }
+    .button-secondary:hover {
+      box-shadow: none;
+      background: #f5fbff;
+      border-color: #7fb7da;
+    }
+    .button-secondary:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      background: #f8fbff;
+      color: #8aa0b7;
+      border-color: #d5dfeb;
+    }
     button:disabled {
       opacity: 0.8;
       cursor: wait;
@@ -689,6 +711,12 @@ def _render_index() -> bytes:
           <span>Запустить сканирование</span>
           <span class="btn-loader" aria-hidden="true"></span>
         </button>
+        <button id="export_html_btn" class="button-secondary" onclick="exportResult('html')" disabled>
+          <span>Экспорт в HTML</span>
+        </button>
+        <button id="export_pdf_btn" class="button-secondary" onclick="exportResult('pdf')" disabled>
+          <span>Экспорт в PDF</span>
+        </button>
         <p id="status" class="status muted"></p>
       </div>
     </section>
@@ -774,6 +802,49 @@ def _render_index() -> bytes:
       commitsInput.style.opacity = historyToggle.checked ? "1" : "0.6";
     }
 
+    function setExportEnabled(enabled) {
+      document.getElementById("export_html_btn").disabled = !enabled;
+      document.getElementById("export_pdf_btn").disabled = !enabled;
+    }
+
+    async function exportResult(format) {
+      const err = document.getElementById("err");
+      err.textContent = "";
+      err.classList.remove("has-error");
+
+      try {
+        const res = await fetch("/api/export?format=" + encodeURIComponent(format), {
+          method: "GET"
+        });
+
+        if (!res.ok) {
+          let payload = null;
+          try {
+            payload = await res.json();
+          } catch (_ignored) {
+            payload = null;
+          }
+          throw new Error((payload && payload.error) || ("РћС€РёР±РєР° HTTP " + res.status));
+        }
+
+        const blob = await res.blob();
+        const contentDisposition = res.headers.get("Content-Disposition") || "";
+        const match = contentDisposition.match(/filename="?([^\";]+)"?/i);
+        const filename = match ? match[1] : ("nuclear-scan-report." + format);
+        const link = document.createElement("a");
+        const downloadUrl = URL.createObjectURL(blob);
+        link.href = downloadUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(downloadUrl);
+      } catch (e) {
+        err.textContent = String(e);
+        err.classList.add("has-error");
+      }
+    }
+
     async function startScan() {
       const err = document.getElementById("err");
       err.textContent = "";
@@ -812,6 +883,7 @@ def _render_index() -> bytes:
     function renderResult(data) {
       const rows = document.getElementById("rows");
       rows.innerHTML = "";
+      setExportEnabled(true);
 
       let summaryText = "Найдено: " + data.total + " | Время сканирования: " + data.elapsed_ms + " мс";
       if ((data.ai_findings || 0) > 0) {
@@ -853,6 +925,7 @@ def _render_index() -> bytes:
 
     document.getElementById("scan_history").addEventListener("change", syncHistoryState);
     syncHistoryState();
+    setExportEnabled(false);
   </script>
 </body>
 </html>"""
@@ -864,32 +937,90 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _json(self, status: int, payload: dict[str, Any]) -> None:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        self._write_body(status, body, "application/json; charset=utf-8")
+
+    def _write_body(
+        self,
+        status: int,
+        body: bytes,
+        content_type: str,
+        *,
+        content_disposition: str | None = None,
+    ) -> None:
         self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
+        if content_disposition:
+            self.send_header("Content-Disposition", content_disposition)
         self.end_headers()
         self.wfile.write(body)
 
-    def do_GET(self) -> None:  # noqa: N802
-        if self.path in {"/", "/index.html"}:
-            body = _render_index()
-            self.send_response(HTTPStatus.OK)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
-            self.send_header("Cache-Control", "no-store")
-            self.send_header("X-Content-Type-Options", "nosniff")
-            self.end_headers()
-            self.wfile.write(body)
+    def _set_latest_scan(self, findings: list[Any], target: str) -> None:
+        payload = {"findings": list(findings), "target": target}
+        lock = getattr(self.server, "latest_scan_lock", None)
+        if lock is None:
+            self.server.latest_scan = payload  # type: ignore[attr-defined]
             return
-        if self.path == "/api/health":
+        with lock:
+            self.server.latest_scan = payload  # type: ignore[attr-defined]
+
+    def _get_latest_scan(self) -> dict[str, Any] | None:
+        lock = getattr(self.server, "latest_scan_lock", None)
+        if lock is None:
+            return getattr(self.server, "latest_scan", None)
+        with lock:
+            return getattr(self.server, "latest_scan", None)
+
+    def _handle_export(self, query: str) -> None:
+        params = parse_qs(query)
+        export_format = str(params.get("format", [""])[0]).strip().lower()
+        if export_format not in {"html", "pdf"}:
+            self._json(HTTPStatus.BAD_REQUEST, {"error": "Поддерживаемые форматы: html, pdf"})
+            return
+
+        latest_scan = self._get_latest_scan()
+        if not latest_scan:
+            self._json(HTTPStatus.CONFLICT, {"error": "Сначала запустите сканирование"})
+            return
+
+        findings = latest_scan.get("findings", [])
+        target = str(latest_scan.get("target", ""))
+        if export_format == "html":
+            body = generate_html_report(findings, target=target).encode("utf-8")
+            content_type = "text/html; charset=utf-8"
+            filename = "nuclear-scan-report.html"
+        else:
+            body = generate_pdf_report(findings, target=target)
+            content_type = "application/pdf"
+            filename = "nuclear-scan-report.pdf"
+
+        self._write_body(
+            HTTPStatus.OK,
+            body,
+            content_type,
+            content_disposition=f'attachment; filename="{filename}"',
+        )
+
+    def do_GET(self) -> None:  # noqa: N802
+        parsed = urlsplit(self.path)
+        path = parsed.path
+        if path in {"/", "/index.html"}:
+            body = _render_index()
+            self._write_body(HTTPStatus.OK, body, "text/html; charset=utf-8")
+            return
+        if path == "/api/health":
             self._json(HTTPStatus.OK, {"status": "ok"})
+            return
+        if path == "/api/export":
+            self._handle_export(parsed.query)
             return
         self._json(HTTPStatus.NOT_FOUND, {"error": "Не найдено"})
 
     def do_POST(self) -> None:  # noqa: N802
-        if self.path != "/api/scan":
+        parsed = urlsplit(self.path)
+        if parsed.path != "/api/scan":
             self._json(HTTPStatus.NOT_FOUND, {"error": "Не найдено"})
             return
 
@@ -936,6 +1067,8 @@ class _Handler(BaseHTTPRequestHandler):
             return
 
         findings.sort(key=lambda finding: (-finding.score, finding.file, finding.line_number))
+        export_target = params["target"] or params["url"] or getattr(self.server, "default_target", ".")
+        self._set_latest_scan(findings, str(export_target))
         serialized = [_finding_to_dict(finding, params["include_recommendations"]) for finding in findings]
         ai_count = sum(1 for f in findings if _is_ai_finding(f))
         self._json(
@@ -972,6 +1105,8 @@ def main() -> None:
     args = build_parser().parse_args()
     server = ThreadingHTTPServer((args.host, args.port), _Handler)
     server.default_target = args.target  # type: ignore[attr-defined]
+    server.latest_scan = None  # type: ignore[attr-defined]
+    server.latest_scan_lock = Lock()  # type: ignore[attr-defined]
     print(f"Nuclear веб-интерфейс: http://{args.host}:{args.port}")
     print("Нажмите Ctrl+C для остановки.")
     try:

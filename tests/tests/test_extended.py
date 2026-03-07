@@ -226,6 +226,11 @@ class TestCLIArgs:
         args = parser.parse_args(["target", "--format", "sarif"])
         assert args.format == "sarif"
 
+    def test_parser_format_pdf(self):
+        parser = build_parser()
+        args = parser.parse_args(["target", "--format", "pdf"])
+        assert args.format == "pdf"
+
     def test_parser_url_argument(self):
         parser = build_parser()
         args = parser.parse_args(["--url", "https://github.com/example/repo"])

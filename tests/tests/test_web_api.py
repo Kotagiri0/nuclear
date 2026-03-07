@@ -140,3 +140,49 @@ def test_scan_request_runs_on_default_target(tmp_path):
         server.shutdown()
         server.server_close()
         thread.join(timeout=2)
+
+
+def test_export_requires_scan_first():
+    server, thread = _start_server()
+    port = server.server_address[1]
+    base_url = f"http://127.0.0.1:{port}"
+    req = Request(f"{base_url}/api/export?format=pdf", method="GET")
+    try:
+        with urlopen(req, timeout=10) as resp:
+            assert resp.status == 409
+    except HTTPError as exc:
+        body = json.loads(exc.read().decode("utf-8"))
+        assert exc.code == 409
+        assert body["error"]
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
+def test_export_html_and_pdf_after_scan(tmp_path):
+    vuln = tmp_path / "vuln.py"
+    vuln.write_text("AKIAJX7LKQHMBQWRFP2A\n", encoding="utf-8")
+
+    server, thread = _start_server(default_target=str(tmp_path))
+    port = server.server_address[1]
+    base_url = f"http://127.0.0.1:{port}"
+    try:
+        status, _ = _request_json(base_url, {"target": str(vuln), "min_severity": "LOW"})
+        assert status == 200
+
+        with urlopen(Request(f"{base_url}/api/export?format=html", method="GET"), timeout=20) as resp:
+            html = resp.read().decode("utf-8")
+            assert resp.status == 200
+            assert "text/html" in resp.headers.get("Content-Type", "")
+            assert "<html" in html.lower()
+
+        with urlopen(Request(f"{base_url}/api/export?format=pdf", method="GET"), timeout=20) as resp:
+            body = resp.read()
+            assert resp.status == 200
+            assert "application/pdf" in resp.headers.get("Content-Type", "")
+            assert body.startswith(b"%PDF")
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
