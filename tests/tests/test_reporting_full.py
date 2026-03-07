@@ -90,8 +90,8 @@ class TestDeduplicate:
         assert len(result) == 2
 
     def test_keeps_different_types(self):
-        f1 = _f(secret_type="AWS Access Key")
-        f2 = _f(secret_type="GitHub Token")
+        f1 = _f(secret_type="Yandex Cloud Service Account Key")
+        f2 = _f(secret_type="VK API Access Token")
         result = deduplicate([f1, f2])
         assert len(result) == 2
 

@@ -47,7 +47,14 @@ def _clone_git_repo(url: str, out_dir: str, shallow: bool = True) -> str:
     return str(dst)
 
 
-def scan_remote_source(url: str, scan_history: bool = False, history_commits: int = 50) -> tuple[list, str, str]:
+def scan_remote_source(
+    url: str,
+    scan_history: bool = False,
+    history_commits: int = 50,
+    *,
+    ai_security_cfg=None,
+    file_filter=None,
+) -> tuple[list, str, str]:
     from scanner.core.scanning import scan_git_history
 
     tmp_dir = tempfile.mkdtemp(prefix="secret_scanner_remote_")
@@ -58,7 +65,7 @@ def scan_remote_source(url: str, scan_history: bool = False, history_commits: in
         if _looks_like_git_url(url):
             source_kind = "git"
             repo_path = _clone_git_repo(url, tmp_dir, shallow=not scan_history)
-            findings.extend(scan_directory(repo_path))
+            findings.extend(scan_directory(repo_path, ai_security_cfg=ai_security_cfg, file_filter=file_filter))
             if scan_history:
                 findings.extend(scan_git_history(repo_path, max_commits=history_commits))
             return findings, repo_path, source_kind
@@ -67,16 +74,17 @@ def scan_remote_source(url: str, scan_history: bool = False, history_commits: in
         suffix = Path(downloaded).suffix.lower()
         if suffix == ".zip":
             source_kind = "zip"
-            findings.extend(scan_zip(downloaded))
+            findings.extend(scan_zip(downloaded, ai_security_cfg=ai_security_cfg, file_filter=file_filter))
             return findings, downloaded, source_kind
 
         source_kind = "file"
         if Path(downloaded).is_dir():
-            findings.extend(scan_directory(downloaded))
+            findings.extend(scan_directory(downloaded, ai_security_cfg=ai_security_cfg, file_filter=file_filter))
         else:
             from scanner.core.scanning import scan_file
 
-            findings.extend(scan_file(downloaded))
+            if file_filter is None or file_filter(downloaded):
+                findings.extend(scan_file(downloaded, ai_security_cfg=ai_security_cfg))
         return findings, downloaded, source_kind
     finally:
         try:

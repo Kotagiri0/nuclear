@@ -10,6 +10,7 @@ from scanner.config.config import (
     save_default_config,
     set_config_value,
 )
+from scanner.config.dotenv import load_dotenv
 
 __all__ = [
     "CONFIG_DIR",
@@ -22,4 +23,5 @@ __all__ = [
     "load_config",
     "save_default_config",
     "set_config_value",
+    "load_dotenv",
 ]

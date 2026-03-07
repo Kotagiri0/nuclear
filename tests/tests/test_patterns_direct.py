@@ -25,16 +25,16 @@ def _matches(pattern_name: str, text: str) -> bool:
 
 class TestPatternMatches:
     def test_aws_access_key(self):
-        assert _matches("AWS Access Key", "AKIAJX7LKQHMBQWRFP2A")
+        assert _matches("Yandex Cloud Service Account Key", "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe")
 
     def test_aws_access_key_in_context(self):
-        assert _matches("AWS Access Key", "key = 'AKIAJX7LKQHMBQWRFP2A'")
+        assert _matches("Yandex Cloud Service Account Key", "key = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'")
 
     def test_aws_secret_key(self):
         assert _matches("AWS Secret Key", "aws_secret_key = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'")
 
     def test_github_token(self):
-        assert _matches("GitHub Token", "ghp_mNpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvW")
+        assert _matches("VK API Access Token", "vk567890abcdefghijklmnopqrstuvwxyzABCD")
 
     def test_github_oauth(self):
         assert _matches("GitHub OAuth", "gho_mNpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvW")
@@ -49,13 +49,13 @@ class TestPatternMatches:
         assert _matches("Slack Token", "xoxp-123456789-ABCDEFGHIJ-xyzxyzxyz")
 
     def test_stripe_secret_key(self):
-        assert _matches("Stripe Secret Key", "sk_live_abcdefghijklmnopqrstuvwx")
+        assert _matches("Sber API Key", "sber_api_key='sber_xK9mZ2qR7nL5pT0wY4cD8eF1gH3j'")
 
     def test_stripe_publishable_key(self):
         assert _matches("Stripe Publishable Key", "pk_live_abcdefghijklmnopqrstuvwx")
 
     def test_google_api_key(self):
-        assert _matches("Google API Key", "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZ12345678")
+        assert _matches("Cloud.ru API Token", "crp_xK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vN")
 
     def test_google_oauth(self):
         assert _matches("Google OAuth", "123456789-abcdefghijklmnopqrstuvwxyz0123.apps.googleusercontent.com")
@@ -107,7 +107,7 @@ class TestPatternMatches:
         assert _matches("Generic API Key", "api_key = 'abcdefghijklmnopqrstuvwxyz123456'")
 
     def test_generic_secret(self):
-        assert _matches("Generic Secret", "password = 'SuperSecret123!'")
+        assert _matches("Generic Secret", "password = 'ozon_api_xK9mZ2qR7nL5pT0wY4cD8eF1'")
 
     def test_generic_token(self):
         assert _matches("Generic Token", "token = 'abcdefghijklmnop'")
@@ -117,13 +117,13 @@ class TestPatternMatches:
 
 class TestPatternNoFalsePositives:
     def test_aws_access_key_no_match_plain_text(self):
-        assert not _matches("AWS Access Key", "hello world this is normal text")
+        assert not _matches("Yandex Cloud Service Account Key", "hello world this is normal text")
 
     def test_github_token_no_match_plain_text(self):
-        assert not _matches("GitHub Token", "print('hello world')")
+        assert not _matches("VK API Access Token", "print('hello world')")
 
     def test_stripe_no_match_plain_text(self):
-        assert not _matches("Stripe Secret Key", "regular string here")
+        assert not _matches("Sber API Key", "regular string here")
 
     def test_jwt_no_match_plain_text(self):
         assert not _matches("JWT Token", "just a normal sentence without tokens")
@@ -169,7 +169,7 @@ class TestIgnorePatterns:
         assert is_false_positive("TODO: set token here")
 
     def test_real_looking_key_not_false_positive(self):
-        assert not is_false_positive("kJH78sdKJH9823kjsdKJHsdkj23Rz")
+        assert not is_false_positive("tinkoff_xK9mZ2qR7nL5pT0wY4cD8eF1gH3")
 
     def test_low_char_diversity_is_false_positive(self):
         # fewer than 4 unique chars

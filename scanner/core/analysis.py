@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from scanner.core.patterns import (
+from scanner.core.ru_patterns import (
     CONTEXT_KEYWORDS,
     HASH_PATTERNS,
     HIGH_ENTROPY_FILE_TYPES,
@@ -94,9 +94,11 @@ def validate_structure(secret_type: str, value: str) -> bool:
         return len(parts) == 3 and all(len(p) > 0 for p in parts)
     if secret_type == "AWS Access Key":
         return bool(re.match(r"^AKIA[0-9A-Z]{16}$", value))
+    if secret_type == "Yandex Cloud Service Account Key":
+        return bool(re.match(r"^AQ[A-Za-z0-9_-]{38,}$", value))
     if secret_type == "Private Key":
         return "BEGIN" in value and ("PRIVATE KEY" in value or "RSA" in value)
-    if "UUID" in secret_type or "HubSpot" in secret_type:
+    if "UUID" in secret_type or "HubSpot" in secret_type or "Ozon Client ID" in secret_type:
         return bool(re.match(r"^[a-f0-9\-]{36}$", value, re.IGNORECASE))
     if secret_type == "Connection String":
         return "://" in value and "@" in value

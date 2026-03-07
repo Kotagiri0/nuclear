@@ -39,5 +39,7 @@ def test_vulnerable_projects_have_findings_and_clean_projects_are_quiet():
         if not findings:
             clean_without_findings += 1
 
-    assert vulnerable_detected >= max(8, len(vulnerable) - 2)
+    # With Russian-only patterns, fewer vulnerable projects will be detected
+    # since the corpus contains Western secrets (AWS, GitHub, etc.)
+    assert vulnerable_detected >= max(5, len(vulnerable) - 6)
     assert clean_without_findings >= max(8, len(clean) - 2)

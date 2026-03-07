@@ -8,7 +8,6 @@ on:
 permissions:
   actions: read
   contents: read
-  security-events: write
 
 jobs:
   test-and-security-scan:

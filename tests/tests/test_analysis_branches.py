@@ -27,8 +27,8 @@ class TestExtractMatchValue:
         assert extract_match_value(m) == "mySecretValue"
 
     def test_returns_group0_when_no_capture_group(self):
-        m = re.search(r"AKIA[0-9A-Z]{16}", "AKIAJX7LKQHMBQWRFP2A")
-        assert extract_match_value(m) == "AKIAJX7LKQHMBQWRFP2A"
+        m = re.search(r"AQ[A-Za-z0-9_-]{38,}", "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe")
+        assert extract_match_value(m) == "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe"
 
     def test_returns_group0_for_non_capturing_group(self):
         # re.match with no capture groups
@@ -158,17 +158,17 @@ class TestScanContentBranches:
         assert scan_content("", "test.py") == []
 
     def test_only_python_comments_returns_empty(self):
-        content = "# api_key = 'AKIAJX7LKQHMBQWRFP2A'\n# token = 'abc'\n"
+        content = "# api_key = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n# token = 'abc'\n"
         assert scan_content(content, "test.py") == []
 
     def test_only_cpp_comments_returns_empty(self):
-        content = "// api_key = 'AKIAJX7LKQHMBQWRFP2A'\n// secret\n"
+        content = "// api_key = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n// secret\n"
         assert scan_content(content, "test.js") == []
 
     def test_hash_value_reduces_score(self):
         # MD5-like hex string: is_likely_hash → True → score -= 3
         # Twilio Auth Token regex matches 32-char hex but base_score=3, after -3 = 0 → filtered
-        content = "auth = 'd41d8cd98f00b204e9800998ecf8427e'\n"
+        content = "auth = 'vk_token_xK9mZ2qR7nL5pT0wY4c'\n"
         findings = scan_content(content, "test.py")
         # Either no findings, or score is reduced
         for f in findings:
@@ -176,14 +176,14 @@ class TestScanContentBranches:
             assert f.score >= 0
 
     def test_env_file_bonus_applied(self):
-        content = "API_KEY=sk_live_abcdefghijklmnopqrstuvwx\n"
+        content = "API_KEY=sber_xK9mZ2qR7nL5pT0wY4cD8eF1gH3j\n"
         findings_env = scan_content(content, "config.env")
         findings_py = scan_content(content, "config.py")
         if findings_env and findings_py:
             assert max(f.score for f in findings_env) >= max(f.score for f in findings_py)
 
     def test_dot_env_extension_extra_bonus(self):
-        content = "API_KEY=sk_live_abcdefghijklmnopqrstuvwx\n"
+        content = "API_KEY=sber_xK9mZ2qR7nL5pT0wY4cD8eF1gH3j\n"
         findings_env = scan_content(content, ".env")
         findings_cfg = scan_content(content, "config.cfg")
         if findings_env and findings_cfg:
@@ -192,22 +192,22 @@ class TestScanContentBranches:
 
     def test_structural_valid_adds_to_score(self):
         # AWS key has validate_structure → True → +3 score
-        content = "AKIAJX7LKQHMBQWRFP2A\n"
+        content = "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n"
         findings = scan_content(content, "test.py")
-        aws = [f for f in findings if f.secret_type == "AWS Access Key"]
+        aws = [f for f in findings if f.secret_type == "Yandex Cloud Service Account Key"]
         assert aws
         assert aws[0].structural_valid is True
 
     def test_low_score_finding_filtered(self):
         # Generic patterns with very low scores should be filtered when score < 2
         # Twilio Auth Token base_score=3, but hex string -3 → score=0 → filtered
-        content = "auth = 'd41d8cd98f00b204e9800998ecf8427e'\n"
+        content = "auth = 'vk_token_xK9mZ2qR7nL5pT0wY4c'\n"
         findings = scan_content(content, "test.py")
         for f in findings:
             assert f.score >= 2
 
     def test_confidence_set_on_all_findings(self):
-        content = "AKIAJX7LKQHMBQWRFP2A\n"
+        content = "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n"
         findings = scan_content(content, "test.py")
         for f in findings:
             assert 0 < f.confidence <= 0.99
@@ -216,7 +216,7 @@ class TestScanContentBranches:
         # .py → taint analysis runs
         content = (
             "import requests\n"
-            "API_KEY = 'AKIAJX7LKQHMBQWRFP2A'\n"
+            "API_KEY = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n"
             "requests.get('https://api.example.com', headers={'key': API_KEY})\n"
         )
         findings_py = scan_content(content, "test.py")
@@ -227,17 +227,17 @@ class TestScanContentBranches:
         assert len(tainted_py) >= len(tainted_txt)
 
     def test_entropy_above_4_5_adds_3_to_score(self):
-        # High entropy random-looking GitHub token
-        content = "ghp_mNpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvW\n"
+        # High entropy random-looking VK API token
+        content = "vk567890abcdefghijklmnopqrstuvwxyzABCD\n"
         findings = scan_content(content, "test.py")
-        gh = [f for f in findings if f.secret_type == "GitHub Token"]
-        assert gh
+        vk = [f for f in findings if f.secret_type == "VK API Access Token"]
+        assert vk
         # Entropy should be recorded
-        assert gh[0].entropy > 0
+        assert vk[0].entropy > 0
 
     def test_context_match_detected(self):
-        content = "# api_key context here\napi_key = 'AKIAJX7LKQHMBQWRFP2A'\n"
+        content = "# api_key context here\napi_key = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n"
         findings = scan_content(content, "test.py")
-        aws = [f for f in findings if f.secret_type == "AWS Access Key"]
+        aws = [f for f in findings if f.secret_type == "Yandex Cloud Service Account Key"]
         if aws:
             assert aws[0].context_match is True

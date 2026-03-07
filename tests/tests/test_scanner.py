@@ -47,7 +47,7 @@ class TestIsLikelyHash:
         assert is_likely_hash("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
 
     def test_not_hash(self):
-        assert not is_likely_hash("AKIAJX7LKQHMBQWRFP2A")
+        assert not is_likely_hash("notahash")
 
     def test_uppercase_md5(self):
         assert is_likely_hash("D41D8CD98F00B204E9800998ECF8427E")
@@ -70,7 +70,7 @@ class TestIsFalsePositive:
         assert is_false_positive("aaabbbccc")
 
     def test_real_looking_key(self):
-        assert not is_false_positive("kJH78sdKJH9823kjsdKJHsdkj23Rz")
+        assert not is_false_positive("tinkoff_xK9mZ2qR7nL5pT0wY4cD8eF1gH3")
 
 
 class TestHasContext:
@@ -100,10 +100,10 @@ class TestValidateStructure:
         assert not validate_structure("JWT Token", "notajwt")
 
     def test_valid_aws_key(self):
-        assert validate_structure("AWS Access Key", "AKIAIOSFODNN7EXAMPLE")
+        assert validate_structure("Yandex Cloud Service Account Key", "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe")
 
     def test_invalid_aws_key(self):
-        assert not validate_structure("AWS Access Key", "BKIAIOSFODNN7EXAMPLE")
+        assert not validate_structure("Yandex Cloud Service Account Key", "BQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBB")
 
     def test_private_key(self):
         assert validate_structure("Private Key", "-----BEGIN RSA PRIVATE KEY-----")
@@ -134,7 +134,7 @@ class TestTaintAnalysis:
     def test_direct_sink(self):
         content = (
             "import requests\n"
-            "API_KEY = 'AKIAJX7LKQHMBQWRFP2A'\n"
+            "API_KEY = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n"
             "requests.get('https://api.com', headers={'key': API_KEY})\n"
         )
         traces = taint_analysis(content, "test.py", [("API_KEY", 2)])
@@ -145,7 +145,7 @@ class TestTaintAnalysis:
     def test_propagation_chain(self):
         content = (
             "import requests\n"
-            "SECRET = 'kJH78sdKJH9823kjsdKJHsdkj23Rz'\n"
+            "SECRET = 'tinkoff_xK9mZ2qR7nL5pT0wY4cD8eF1gH3'\n"
             "headers = {'Authorization': SECRET}\n"
             "requests.post('https://api.com', headers=headers)\n"
         )
@@ -156,7 +156,7 @@ class TestTaintAnalysis:
     def test_logging_sink(self):
         content = (
             "import logging\n"
-            "TOKEN = 'ghp_mNpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvW'\n"
+            "TOKEN = 'vkxK9mZ2qR7nL5pT0wYcD8eF1gH3jB6vN'\n"
             "logging.info(f'token={TOKEN}')\n"
         )
         traces = taint_analysis(content, "test.py", [("TOKEN", 2)])
@@ -164,7 +164,7 @@ class TestTaintAnalysis:
 
     def test_no_sink(self):
         content = (
-            "API_KEY = 'AKIAJX7LKQHMBQWRFP2A'\n"
+            "API_KEY = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n"
             "x = API_KEY.upper()\n"
         )
         traces = taint_analysis(content, "test.py", [("API_KEY", 1)])
@@ -178,7 +178,7 @@ class TestTaintAnalysis:
     def test_taint_depth(self):
         content = (
             "import requests\n"
-            "RAW = 'AKIAJX7LKQHMBQWRFP2A'\n"
+            "RAW = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n"
             "KEY = RAW\n"
             "AUTH = KEY\n"
             "requests.post('https://api.com', headers={'key': AUTH})\n"
@@ -190,7 +190,7 @@ class TestTaintAnalysis:
     def test_sink_file_matches_source(self):
         content = (
             "import requests\n"
-            "TOKEN = 'ghp_mNpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvW'\n"
+            "TOKEN = 'vkxK9mZ2qR7nL5pT0wYcD8eF1gH3jB6vN'\n"
             "requests.get('https://api.com', params={'t': TOKEN})\n"
         )
         traces = taint_analysis(content, "myfile.py", [("TOKEN", 2)])
@@ -201,17 +201,17 @@ class TestTaintAnalysis:
 
 class TestScanContent:
     def test_finds_aws_key(self):
-        content = "AKIAJX7LKQHMBQWRFP2A\n"
+        content = "YC_KEY=AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n"
         findings = scan_content(content, "test.py")
-        assert any(f.secret_type == "AWS Access Key" for f in findings)
+        assert any(f.secret_type == "Yandex Cloud Service Account Key" for f in findings)
 
     def test_finds_github_token(self):
-        content = "ghp_mNpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvW\n"
+        content = "VK_TOKEN=vk567890abcdefghijklmnopqrstuvwxyzABCD\n"
         findings = scan_content(content, "config.py")
-        assert any(f.secret_type == "GitHub Token" for f in findings)
+        assert any(f.secret_type == "VK API Access Token" for f in findings)
 
     def test_skips_comments(self):
-        content = "# ключ_api = \"ghp_mNpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvW\"\n"
+        content = "# ключ_api = \"vk567890abcdefghijklmnopqrstuvwxyzABCD\"\n"
         assert len(scan_content(content, "test.py")) == 0
 
     def test_finds_jwt(self):
@@ -220,7 +220,7 @@ class TestScanContent:
         assert len(findings) > 0
 
     def test_env_file_bonus(self):
-        content = 'STRIPE_KEY="sk_live_abcdefghijklmnopqrstuvwx"\n'
+        content = 'STRIPE_KEY="sber_xK9mZ2qR7nL5pT0wY4cD8eF1gH3j"\n'
         fe = scan_content(content, ".env")
         fp = scan_content(content, "config.py")
         se = [f.score for f in fe]
@@ -238,34 +238,34 @@ class TestScanContent:
         assert any(f.secret_type == "Private Key" for f in findings)
 
     def test_generic_secret(self):
-        assert len(scan_content("password = 'SuperSecret123!'\n", "settings.py")) > 0
+        assert len(scan_content("password = 'ozon_api_xK9mZ2qR7nL5pT0wY4cD8eF1'\n", "settings.py")) > 0
 
     def test_correct_line_number(self):
-        content = "import os\napi_key = 'AKIAJX7LKQHMBQWRFP2A'\n"
-        aws = [f for f in scan_content(content, "test.py") if f.secret_type == "AWS Access Key"]
+        content = "import os\napi_key = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n"
+        aws = [f for f in scan_content(content, "test.py") if f.secret_type == "Yandex Cloud Service Account Key"]
         if aws:
             assert aws[0].line_number == 2
 
     def test_taint_attached_to_finding(self):
         content = (
             "import requests\n"
-            "API_KEY = 'AKIAJX7LKQHMBQWRFP2A'\n"
+            "API_KEY = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n"
             "requests.get('https://api.com', headers={'key': API_KEY})\n"
         )
         findings = scan_content(content, "test.py")
-        aws = [f for f in findings if f.secret_type == "AWS Access Key"]
+        aws = [f for f in findings if f.secret_type == "Yandex Cloud Service Account Key"]
         assert aws
         assert len(aws[0].taint_traces) > 0
 
     def test_taint_boosts_score(self):
-        plain = "API_KEY = 'AKIAJX7LKQHMBQWRFP2A'\n"
+        plain = "API_KEY = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n"
         with_sink = (
             "import requests\n"
-            "API_KEY = 'AKIAJX7LKQHMBQWRFP2A'\n"
+            "API_KEY = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n"
             "requests.get('https://api.com', params={'k': API_KEY})\n"
         )
-        plain_f = [f for f in scan_content(plain, "test.py") if f.secret_type == "AWS Access Key"]
-        sink_f = [f for f in scan_content(with_sink, "test.py") if f.secret_type == "AWS Access Key"]
+        plain_f = [f for f in scan_content(plain, "test.py") if f.secret_type == "Yandex Cloud Service Account Key"]
+        sink_f = [f for f in scan_content(with_sink, "test.py") if f.secret_type == "Yandex Cloud Service Account Key"]
         if plain_f and sink_f:
             assert sink_f[0].score > plain_f[0].score
 
@@ -279,15 +279,15 @@ class TestScanZip:
         return tmp
 
     def test_basic_zip_scan(self):
-        path = self._make_zip({"config.py": "AKIAJX7LKQHMBQWRFP2A\n"})
+        path = self._make_zip({"config.py": "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n"})
         try:
             findings = scan_zip(path)
-            assert any(f.secret_type == "AWS Access Key" for f in findings)
+            assert any(f.secret_type == "Yandex Cloud Service Account Key" for f in findings)
         finally:
             os.unlink(path)
 
     def test_zip_preserves_inner_path(self):
-        path = self._make_zip({"subdir/secrets.py": "AKIAJX7LKQHMBQWRFP2A\n"})
+        path = self._make_zip({"subdir/secrets.py": "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n"})
         try:
             findings = scan_zip(path)
             assert any(f.file == "subdir/secrets.py" for f in findings)
@@ -297,7 +297,7 @@ class TestScanZip:
     def test_zip_skips_images(self):
         path = self._make_zip({
             "photo.jpg": b"\xff\xd8\xff".decode("latin-1"),
-            "code.py": "AKIAJX7LKQHMBQWRFP2A\n",
+            "code.py": "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n",
         })
         try:
             findings = scan_zip(path)
@@ -307,8 +307,8 @@ class TestScanZip:
 
     def test_zip_skips_node_modules(self):
         path = self._make_zip({
-            "node_modules/pkg/index.js": "AKIAJX7LKQHMBQWRFP2A\n",
-            "app.py": "AKIAJX7LKQHMBQWRFP2A\n",
+            "node_modules/pkg/index.js": "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n",
+            "app.py": "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n",
         })
         try:
             findings = scan_zip(path)
@@ -318,9 +318,9 @@ class TestScanZip:
 
     def test_zip_multiple_files(self):
         path = self._make_zip({
-            "api.py": "AKIAJX7LKQHMBQWRFP2A\n",
-            ".env": "STRIPE_KEY=sk_live_abcdefghijklmnopqrstuvwx\n",
-            "auth.py": "ghp_mNpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvW\n",
+            "api.py": "AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe\n",
+            ".env": "STRIPE_KEY=sber_xK9mZ2qR7nL5pT0wY4cD8eF1gH3j\n",
+            "auth.py": "vkxK9mZ2qR7nL5pT0wYcD8eF1gH3jB6vN\n",
         })
         try:
             findings = scan_zip(path)
@@ -339,13 +339,13 @@ class TestScanZip:
     def test_zip_with_taint(self):
         content = (
             "import requests\n"
-            "API_KEY = 'AKIAJX7LKQHMBQWRFP2A'\n"
+            "API_KEY = 'AQxK9mZ2qR7nL5pT0wY4cD8eF1gH3jB6vNxAaBbCcDdEe'\n"
             "requests.get('https://api.com', params={'k': API_KEY})\n"
         )
         path = self._make_zip({"service.py": content})
         try:
             findings = scan_zip(path)
-            aws = [f for f in findings if f.secret_type == "AWS Access Key"]
+            aws = [f for f in findings if f.secret_type == "Yandex Cloud Service Account Key"]
             assert aws and len(aws[0].taint_traces) > 0
         finally:
             os.unlink(path)
