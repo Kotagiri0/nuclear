@@ -120,10 +120,18 @@ def _parse_scan_request(payload: Any, default_target: str) -> dict[str, Any]:
     exclude = _normalize_globs(payload.get("exclude"), "exclude")
     include = _normalize_globs(payload.get("include"), "include")
 
+    if target and url:
+        # Web UI keeps the default target pre-filled. If URL is explicitly set and
+        # target equals that default value, prefer URL instead of raising a conflict.
+        default_target_normalized = str(default_target).strip()
+        if target in {".", "./"}:
+            target = None
+        elif default_target_normalized and target == default_target_normalized:
+            target = None
+        else:
+            raise ValueError("Укажите только одно: target или url")
     if not target and not url:
         target = default_target
-    if target and url:
-        raise ValueError("Укажите только одно: target или url")
 
     return {
         "target": target,
@@ -824,7 +832,7 @@ def _render_index() -> bytes:
           } catch (_ignored) {
             payload = null;
           }
-          throw new Error((payload && payload.error) || ("РћС€РёР±РєР° HTTP " + res.status));
+          throw new Error((payload && payload.error) || ("Ошибка HTTP " + res.status));
         }
 
         const blob = await res.blob();
@@ -851,9 +859,11 @@ def _render_index() -> bytes:
       err.classList.remove("has-error");
       setLoading(true);
 
+      const targetValue = document.getElementById("target").value.trim();
+      const urlValue = document.getElementById("url").value.trim();
       const payload = {
-        target: document.getElementById("target").value.trim(),
-        url: document.getElementById("url").value.trim(),
+        target: urlValue ? "" : targetValue,
+        url: urlValue,
         min_severity: document.getElementById("severity").value,
         scan_history: document.getElementById("scan_history").checked,
         history_commits: Number(document.getElementById("history_commits").value || "50"),

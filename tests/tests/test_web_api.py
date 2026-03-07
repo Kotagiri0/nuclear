@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import threading
 from http.server import ThreadingHTTPServer
+from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -30,6 +32,17 @@ def _request_json(base_url: str, payload: dict, method: str = "POST") -> tuple[i
             return resp.status, json.loads(resp.read().decode("utf-8"))
     except HTTPError as exc:
         return exc.code, json.loads(exc.read().decode("utf-8"))
+
+
+def _git(cwd: Path, *args: str) -> None:
+    subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True)
+
+
+def _init_test_repo(repo: Path) -> None:
+    repo.mkdir()
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "test@example.com")
+    _git(repo, "config", "user.name", "test")
 
 
 def test_health_and_index_endpoints():
@@ -136,6 +149,75 @@ def test_scan_request_runs_on_default_target(tmp_path):
         assert body["total"] >= 1
         assert set(body["summary"]) == {"CRITICAL", "HIGH", "MEDIUM", "LOW"}
         assert isinstance(body["findings"], list)
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
+def test_scan_request_url_with_default_target_dot_works(tmp_path):
+    repo = tmp_path / "repo_url"
+    _init_test_repo(repo)
+    (repo / "app.py").write_text("TOKEN='vk567890abcdefghijklmnopqrstuvwxyzABCD'\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "secret")
+
+    server, thread = _start_server(default_target=str(tmp_path))
+    port = server.server_address[1]
+    base_url = f"http://127.0.0.1:{port}"
+    try:
+        status, body = _request_json(
+            base_url,
+            {"target": ".", "url": str(repo), "min_severity": "LOW"},
+        )
+        assert status == 200
+        assert body["total"] >= 1
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
+def test_scan_request_url_history_commits_findings(tmp_path):
+    repo = tmp_path / "repo_hist"
+    _init_test_repo(repo)
+    target_file = repo / "app.py"
+
+    target_file.write_text("print('clean')\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "clean")
+
+    target_file.write_text("TOKEN='vk567890abcdefghijklmnopqrstuvwxyzABCD'\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "secret")
+
+    target_file.write_text("print('clean-again')\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "clean-again")
+
+    server, thread = _start_server(default_target=str(tmp_path))
+    port = server.server_address[1]
+    base_url = f"http://127.0.0.1:{port}"
+    try:
+        no_history_status, no_history_body = _request_json(
+            base_url,
+            {"target": ".", "url": str(repo), "scan_history": False, "min_severity": "LOW"},
+        )
+        history_status, history_body = _request_json(
+            base_url,
+            {
+                "target": ".",
+                "url": str(repo),
+                "scan_history": True,
+                "history_commits": 10,
+                "min_severity": "LOW",
+            },
+        )
+
+        assert no_history_status == 200
+        assert no_history_body["total"] == 0
+        assert history_status == 200
+        assert history_body["total"] >= 1
     finally:
         server.shutdown()
         server.server_close()
