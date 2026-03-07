@@ -595,7 +595,8 @@ PATTERNS = {
     "Generic Bearer Token": (r"(?i)bearer\s+[a-zA-Z0-9_\-\.=]{20,}", 6, "bearer_token"),
     "Generic Basic Auth": (r"(?i)basic\s+[a-zA-Z0-9+/]{20,}={0,2}\b", 6, "basic_auth"),
     "Generic Connection String": (r"(?i)connection[_-]?string\s*[=:]\s*['\"]?[^'\"]{20,}['\"]", 6, "connection_string"),
-    
+    "Connection String": (r"(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis)://[^\s'\"]+:[^\s'\"]+@[^\s'\"]+", 8, "db_credential"),
+
     # === Database Connection Strings ===
     "PostgreSQL Connection String": (r"postgres(?:ql)?://[^\s'\"]+:[^\s'\"]+@[^\s'\"]+", 8, "db_credential"),
     "MySQL Connection String": (r"mysql://[^\s'\"]+:[^\s'\"]+@[^\s'\"]+", 8, "db_credential"),
@@ -607,8 +608,9 @@ PATTERNS = {
     "SQLite Connection String": (r"sqlite:///[^\s'\"]+", 4, "db_path"),
     "MSSQL Connection String": (r"mssql://[^\s'\"]+:[^\s'\"]+@[^\s'\"]+", 8, "db_credential"),
     "Oracle Connection String": (r"oracle://[^\s'\"]+:[^\s'\"]+@[^\s'\"]+", 8, "db_credential"),
-    
+
     # === Private Keys ===
+    "Private Key": (r"-----BEGIN(?: [A-Z0-9]+)? PRIVATE KEY-----", 10, "private_key"),
     "RSA Private Key": (r"-----BEGIN RSA PRIVATE KEY-----", 10, "private_key"),
     "EC Private Key": (r"-----BEGIN EC PRIVATE KEY-----", 10, "private_key"),
     "DSA Private Key": (r"-----BEGIN DSA PRIVATE KEY-----", 10, "private_key"),
