@@ -101,14 +101,6 @@ jobs:
           path: artifacts/
           if-no-files-found: ignore
 
-      - name: Upload SARIF to GitHub Security tab
-        id: upload_sarif
-        if: always() && github.event_name != 'pull_request' && hashFiles('artifacts/scan-report.sarif') != ''
-        continue-on-error: true
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: artifacts/scan-report.sarif
-
       - name: Enforce secret policy gate
         if: steps.scan.outputs.gate_failed == 'true'
         run: |
