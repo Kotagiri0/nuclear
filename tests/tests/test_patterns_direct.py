@@ -60,6 +60,36 @@ class TestPatternMatches:
     def test_google_oauth(self):
         assert _matches("Google OAuth", "123456789-abcdefghijklmnopqrstuvwxyz0123.apps.googleusercontent.com")
 
+    def test_openai_api_key(self):
+        assert _matches("OpenAI API Key", "sk-proj-AbCdEfGhIjKlMnOpQrStUvWxYz1234567890")
+
+    def test_anthropic_api_key(self):
+        assert _matches("Anthropic API Key", "sk-ant-api03-abcdefghijklmnopqrstuvwxyzABCDEF")
+
+    def test_gitlab_token(self):
+        assert _matches("GitLab Token", "glpat-1a2b3c4d5e6f7g8h9i0jklmnop")
+
+    def test_huggingface_token(self):
+        assert _matches("Hugging Face Token", "hf_abcdefghijklmnopqrstuvwxyzABCDE12345")
+
+    def test_npm_access_token(self):
+        assert _matches("npm Access Token", "npm_abcdefghijklmnopqrstuvwxyz1234567890")
+
+    def test_shopify_access_token(self):
+        assert _matches("Shopify Access Token", "shpat_abcdef1234567890abcdef1234567890")
+
+    def test_digitalocean_api_token(self):
+        assert _matches("DigitalOcean API Token", "dop_v1_abcdefghijklmnopqrstuvwxyzABCDE1234567890ZYXWVUT")
+
+    def test_linear_api_key(self):
+        assert _matches("Linear API Key", "lin_api_abcdefghijklmnopqrstuvwxyz123456")
+
+    def test_notion_secret_token(self):
+        assert _matches("Notion Secret Token", "secret_abcdefghijklmnopqrstuvwxyzABCDE1234567890FGHI")
+
+    def test_postman_api_key(self):
+        assert _matches("Postman API Key", "PMAK-1234567890abcdef-1234567890ABCDEF")
+
     def test_private_key_rsa(self):
         assert _matches("Private Key", "-----BEGIN RSA PRIVATE KEY-----")
 
@@ -130,6 +160,9 @@ class TestPatternNoFalsePositives:
 
     def test_connection_string_no_match_plain_url(self):
         assert not _matches("Connection String", "https://example.com/path")
+
+    def test_openai_key_no_match_plain_text(self):
+        assert not _matches("OpenAI API Key", "this is a simple text without secrets")
 
 
 # ── IGNORE_PATTERNS / is_false_positive ───────────────────────────────────────
